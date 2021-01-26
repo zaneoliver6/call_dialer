@@ -2,43 +2,41 @@
 
 namespace MyApp;
 
-use Exception;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 
 class Socket implements MessageComponentInterface {
-   public function __construct()
-   {
-      $this->clients = new \SplObjectStorage;
-   }
 
-   public function onOpen(ConnectionInterface $conn)
-   {
-      $this->clients->attach($conn);
+    public function __construct()
+    {
+        $this->clients = new \SplObjectStorage;
+    }
 
-      echo "New Connection! ({$conn->resourceID})\n";
-   }
+    public function onOpen(ConnectionInterface $conn) {
 
-   public function onMessage(ConnectionInterface $from, $msg)
-   {
-      foreach($this->clients as $client) {
-         if($from->resourceId == $client->resourceId) {
-            continue;
-         }
+        // Store the new connection in $this->clients
+        $this->clients->attach($conn);
 
-         $client->send("Client $from->resourceId said $msg");
-      }
-   }
+        echo "New connection! ({$conn->resourceId})\n";
+    }
 
-   public function onClose(ConnectionInterface $conn)
-   {
-      
-   }
+    public function onMessage(ConnectionInterface $from, $msg) {
 
-   public function onError(ConnectionInterface $conn, Exception $e)
-   {
-      
-   }
+        foreach ( $this->clients as $client ) {
+
+            if ( $from->resourceId == $client->resourceId ) {
+                continue;
+            }
+
+            $client->send( "Client $from->resourceId said $msg" );
+        }
+    }
+
+    public function onClose(ConnectionInterface $conn) {
+    }
+
+    public function onError(ConnectionInterface $conn, \Exception $e) {
+    }
 }
 
 ?>
