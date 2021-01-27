@@ -1,47 +1,36 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Network\Number;
 
-use BadMethodCallException;
-use InvalidArgumentException;
 use Vonage\Client\Response\Response as BaseResponse;
+use Vonage\Client\Response\ResponseInterface;
 
-use function array_merge;
-use function count;
-
-class Response extends BaseResponse
+class Response extends BaseResponse implements ResponseInterface
 {
-    protected $callbacks = [];
+    protected $callbacks = array();
 
-    public function __construct(array $data, array $callbacks = [])
+    public function __construct(array $data, $callbacks = array())
     {
         //add expected keys
-        $this->expected = array_merge($this->expected, [
-            'request_id',
-            'number',
-            'request_price',
-            'remaining_balance',
-            'callback_total_parts'
-        ]);
+        $this->expected = array_merge($this->expected, array(
+           'request_id', 'number', 'request_price', 'remaining_balance', 'callback_total_parts'
+        ));
 
         parent::__construct($data);
 
         foreach ($callbacks as $callback) {
             if (!($callback instanceof Callback)) {
-                throw new InvalidArgumentException('callback must be of type: Vonage\Network\Number\Callback');
+                throw new \InvalidArgumentException('callback must be of type: Vonage\Network\Number\Callback');
             }
 
             if ($callback->getId() !== $this->getId()) {
-                throw new InvalidArgumentException('callback id must match request id');
+                throw new \InvalidArgumentException('callback id must match request id');
             }
         }
 
@@ -53,9 +42,9 @@ class Response extends BaseResponse
         return $this->data['callback_total_parts'];
     }
 
-    public function isComplete(): bool
+    public function isComplete()
     {
-        return count($this->callbacks) === $this->getCallbackTotal();
+        return count($this->callbacks) == $this->getCallbackTotal();
     }
 
     public function getPrice()
@@ -83,16 +72,10 @@ class Response extends BaseResponse
         return $this->data['status'];
     }
 
-    /**
-     * @param $name
-     * @param $args
-     *
-     * @todo This looks somewhat illogical
-     */
     public function __call($name, $args)
     {
         if (empty($this->callbacks)) {
-            throw new BadMethodCallException('can not check for response data without callback data');
+            throw new \BadMethodCallException('can not check for response data without callback data');
         }
 
         foreach ($this->callbacks as $callback) {
@@ -100,20 +83,15 @@ class Response extends BaseResponse
                 return $last;
             }
         }
-
-        /** @noinspection PhpUndefinedVariableInspection */
         return $last;
     }
 
-    public function getCallbacks(): array
+    public function getCallbacks()
     {
         return $this->callbacks;
     }
 
-    /**
-     * @param Callback $callback
-     */
-    public static function addCallback(Response $response, callable $callback): Response
+    public static function addCallback(Response $response, Callback $callback)
     {
         $callbacks = $response->getCallbacks();
         $callbacks[] = $callback;

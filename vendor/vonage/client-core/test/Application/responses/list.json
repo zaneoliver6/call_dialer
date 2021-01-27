@@ -1,0 +1,69 @@
+{
+  "page_size": 3,
+  "page": 2,
+  "total_items": 7,
+  "total_pages": 1,
+  "_embedded": {
+    "applications": [
+      {
+        "id": "78d335fa323d01149c3dd6f0d48968cf",
+        "name": "My Application",
+        "capabilities": {
+          "voice": {
+            "webhooks": {
+              "answer_url": {
+                "address": "https://example.com/webhooks/answer",
+                "http_method": "POST"
+              },
+              "event_url": {
+                "address": "https://example.com/webhooks/event",
+                "http_method": "POST"
+              }
+            }
+          },
+          "messages": {
+            "webhooks": {
+              "inbound_url": {
+                "address": "https://example.com/webhooks/inbound",
+                "http_method": "POST"
+              },
+              "status_url": {
+                "address": "https://example.com/webhooks/status",
+                "http_method": "POST"
+              }
+            }
+          },
+          "rtc": {
+            "webhooks": {
+              "event_url": {
+                "address": "https://example.com/webhooks/event",
+                "http_method": "POST"
+              }
+            }
+          }
+        },
+        "keys": {
+          "public_key": "public_key",
+          "private_key": "private_key"
+        }
+      }
+    ]
+  },
+  "_links": {
+    "self": {
+      "href": "/v2/applications?page_size=3&page_index=2"
+    },
+    "first": {
+      "href": "/v2/applications?page_size=3"
+    },
+    "last": {
+      "href": "/v2/applications?page_size=3&page_index=3"
+    },
+    "next": {
+      "href": "/v2/applications?page_size=3&page_index=3"
+    },
+    "prev": {
+      "href": "/v2/applications?page_size=3&page_index=1"
+    }
+  }
+}

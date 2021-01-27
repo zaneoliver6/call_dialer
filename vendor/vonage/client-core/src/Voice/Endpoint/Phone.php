@@ -1,17 +1,7 @@
 <?php
-
-/**
- * Vonage Client Library for PHP
- *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
- */
-
 declare(strict_types=1);
 
 namespace Vonage\Voice\Endpoint;
-
-use function array_key_exists;
 
 class Phone implements EndpointInterface
 {
@@ -41,7 +31,7 @@ class Phone implements EndpointInterface
         $this->dtmfAnswer = $dtmfAnswer;
     }
 
-    public static function factory(string $number, array $data): Phone
+    public static function factory(string $number, array $data) : Phone
     {
         $endpoint = new Phone($number);
 
@@ -65,7 +55,7 @@ class Phone implements EndpointInterface
         return $endpoint;
     }
 
-    public function getDtmfAnswer(): ?string
+    public function getDtmfAnswer() : ?string
     {
         return $this->dtmfAnswer;
     }
@@ -73,25 +63,21 @@ class Phone implements EndpointInterface
     /**
      * @return array{type: string, number: string, dtmfAnswer?: string}
      */
-    public function jsonSerialize(): array
+    public function jsonSerialize()
     {
         return $this->toArray();
     }
 
-    /**
-     * @return $this
-     */
-    public function setDtmfAnswer(string $dtmf): self
+    public function setDtmfAnswer(string $dtmf) : self
     {
         $this->dtmfAnswer = $dtmf;
-
         return $this;
     }
 
     /**
      * @return array{type: string, number: string, dtmfAnswer?: string}
      */
-    public function toArray(): array
+    public function toArray() : array
     {
         $data = [
             'type' => 'phone',
@@ -113,35 +99,31 @@ class Phone implements EndpointInterface
         return $data;
     }
 
-    public function getId(): string
+    /**
+     * @return string
+     */
+    public function getId() : string
     {
         return $this->id;
     }
 
-    public function getRingbackTone(): ?string
+    public function getRingbackTone() : ?string
     {
         return $this->ringbackTone;
     }
 
-    /**
-     * @return $this
-     */
-    public function setRingbackTone(string $ringbackTone): self
+    public function setRingbackTone(string $ringbackTone) : self
     {
         $this->ringbackTone = $ringbackTone;
-
         return $this;
     }
 
-    public function getUrl(): ?string
+    public function getUrl() : ?string
     {
         return $this->url;
     }
 
-    /**
-     * @return $this
-     */
-    public function setUrl(string $url): self
+    public function setUrl(string $url) : self
     {
         $this->url = $url;
         return $this;

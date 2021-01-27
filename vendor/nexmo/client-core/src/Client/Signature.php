@@ -1,43 +1,25 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Client;
 
-use InvalidArgumentException;
-use Vonage\Client\Exception\Exception as ClientException;
-
-use function hash_hmac;
-use function http_build_query;
-use function is_array;
-use function is_string;
-use function ksort;
-use function md5;
-use function str_replace;
-use function strtolower;
-use function strtoupper;
-use function time;
-use function urldecode;
+use Vonage\Client\Exception\Exception;
 
 class Signature
 {
     /**
      * Params to Sign
-     *
      * @var array
      */
     protected $params;
 
     /**
      * Params with Signature (and timestamp if not present)
-     *
      * @var array
      */
     protected $signed;
@@ -45,7 +27,8 @@ class Signature
     /**
      * Create a signature from a set of parameters.
      *
-     * @throws ClientException
+     * @param array $params
+     * @param $secret
      */
     public function __construct(array $params, $secret, $signatureMethod)
     {
@@ -63,65 +46,61 @@ class Signature
         ksort($this->signed);
 
         $signed = [];
-
         foreach ($this->signed as $key => $value) {
-            $signed[$key] = str_replace(["&", "="], "_", (string) $value);
+            $signed[$key] = str_replace(array("&", "="), "_", $value);
         }
 
         //create base string
-        $base = '&' . urldecode(http_build_query($signed));
+        $base = '&'.urldecode(http_build_query($signed));
 
         $this->signed['sig'] = $this->sign($signatureMethod, $base, $secret);
     }
 
-    /**
-     * @param $signatureMethod
-     * @param $data
-     * @param $secret
-     *
-     * @throws ClientException
-     */
-    protected function sign($signatureMethod, $data, $secret): string
+    protected function sign($signatureMethod, $data, $secret)
     {
         switch ($signatureMethod) {
             case 'md5hash':
                 // md5hash needs the secret appended
                 $data .= $secret;
-
                 return md5($data);
+                break;
             case 'md5':
             case 'sha1':
             case 'sha256':
             case 'sha512':
                 return strtoupper(hash_hmac($signatureMethod, $data, $secret));
+                break;
             default:
-                throw new ClientException(
-                    'Unknown signature algorithm: ' . $signatureMethod .
-                    '. Expected: md5hash, md5, sha1, sha256, or sha512'
-                );
+                throw new Exception('Unknown signature algorithm: '.$signatureMethod.'. Expected: md5hash, md5, sha1, sha256, or sha512');
         }
     }
 
     /**
      * Get the original parameters.
+     *
+     * @return array
      */
-    public function getParams(): array
+    public function getParams()
     {
         return $this->params;
     }
 
     /**
      * Get the signature for the parameters.
+     *
+     * @return string
      */
-    public function getSignature(): string
+    public function getSignature()
     {
         return $this->signed['sig'];
     }
 
     /**
      * Get a full set of parameters including the signature and timestamp.
+     *
+     * @return array
      */
-    public function getSignedParams(): array
+    public function getSignedParams()
     {
         return $this->signed;
     }
@@ -133,27 +112,30 @@ class Signature
      * signature parameter and calculate the correct one. Then call this
      * method and supply the signature that came in with the request.
      *
-     * @param array|string $signature The incoming sig parameter to check (or all incoming params)
-     *
-     * @throws InvalidArgumentException
+     * @param array| string $signature The incoming sig parameter to check
+     *      (or all incoming params)
+     * @return bool
+     * @throws \InvalidArgumentException
      */
-    public function check($signature): bool
+    public function check($signature)
     {
-        if (is_array($signature) && isset($signature['sig'])) {
+        if (is_array($signature) and isset($signature['sig'])) {
             $signature = $signature['sig'];
         }
 
         if (!is_string($signature)) {
-            throw new InvalidArgumentException('signature must be string, or present in array or parameters');
+            throw new \InvalidArgumentException('signature must be string, or present in array or parameters');
         }
 
-        return strtolower($signature) === strtolower($this->signed['sig']);
+        return strtolower($signature) == strtolower($this->signed['sig']);
     }
 
     /**
      * Allow easy comparison.
+     *
+     * @return string
      */
-    public function __toString(): string
+    public function __toString()
     {
         return $this->getSignature();
     }

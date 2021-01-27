@@ -1,30 +1,20 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Client\Response;
 
-use RuntimeException;
-
-use function array_diff;
-use function array_keys;
-use function implode;
-
-class Response extends AbstractResponse
+class Response extends AbstractResponse implements ResponseInterface
 {
     /**
      * Allow specific responses to easily define required parameters.
-     *
      * @var array
      */
-    protected $expected = [];
+    protected $expected = array();
 
     public function __construct(array $data)
     {
@@ -32,7 +22,7 @@ class Response extends AbstractResponse
         $missing = array_diff($this->expected, $keys);
 
         if ($missing) {
-            throw new RuntimeException('missing expected response keys: ' . implode(', ', $missing));
+            throw new \RuntimeException('missing expected response keys: ' . implode(', ', $missing));
         }
 
         $this->data = $data;

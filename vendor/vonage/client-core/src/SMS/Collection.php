@@ -1,12 +1,4 @@
 <?php
-
-/**
- * Vonage Client Library for PHP
- *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
- */
-
 declare(strict_types=1);
 
 namespace Vonage\SMS;
@@ -21,9 +13,6 @@ class Collection implements Countable, Iterator
      */
     protected $data;
 
-    /**
-     * @var int
-     */
     protected $current = 0;
 
     public function __construct(array $apiResponse)
@@ -31,35 +20,32 @@ class Collection implements Countable, Iterator
         $this->data = $apiResponse;
     }
 
-    public function count(): int
+    public function count()
     {
-        return (int)$this->data['message-count'];
+        return (int) $this->data['message-count'];
     }
 
-    public function current(): SentSMS
+    public function current() : SentSMS
     {
         return new SentSMS($this->data['messages'][$this->current]);
     }
 
-    /**
-     * @return bool|float|int|string|null
-     */
     public function key()
     {
         return $this->current;
     }
 
-    public function next(): void
+    public function next()
     {
         $this->current++;
     }
 
-    public function rewind(): void
+    public function rewind()
     {
         $this->current = 0;
     }
 
-    public function valid(): bool
+    public function valid()
     {
         return isset($this->data['messages'][$this->current]);
     }

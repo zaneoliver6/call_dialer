@@ -1,99 +1,69 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Call;
 
-use InvalidArgumentException;
-use JsonSerializable;
-use Laminas\Diactoros\Request;
-use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Message\ResponseInterface;
-use RuntimeException;
 use Vonage\Client\ClientAwareInterface;
 use Vonage\Client\ClientAwareTrait;
-use Vonage\Client\Exception as ClientException;
 use Vonage\Conversations\Conversation;
 use Vonage\Entity\EntityInterface;
 use Vonage\Entity\JsonResponseTrait;
 use Vonage\Entity\JsonSerializableTrait;
 use Vonage\Entity\JsonUnserializableInterface;
 use Vonage\Entity\NoRequestResponseTrait;
-
-use function array_merge;
-use function call_user_func_array;
-use function is_null;
-use function json_decode;
-use function json_encode;
-use function trigger_error;
-use function ucfirst;
+use Psr\Http\Message\ResponseInterface;
+use Vonage\Client\Exception;
+use Zend\Diactoros\Request;
 
 /**
  * Class Call
  *
  * @deprecated Please use Vonage\Voice\OutboundCall or Vonage\Voice\Call instead
  *
- * @property Stream $stream
- * @property Talk $talk
- * @property Dtmf $dtmf
+ * @property \Vonage\Call\Stream $stream
+ * @property \Vonage\Call\Talk   $talk
+ * @property \Vonage\Call\Dtmf   $dtmf
  *
- * @method Stream stream($stream = null)
- * @method Talk   talk($talk = null)
- * @method Dtmf   dtmf($dtmf = null)
+ * @method \Vonage\Call\Stream stream()
+ * @method \Vonage\Call\Talk   talk()
+ * @method \Vonage\Call\Dtmf   dtmf()
  */
-class Call implements EntityInterface, JsonSerializable, JsonUnserializableInterface, ClientAwareInterface
+class Call implements EntityInterface, \JsonSerializable, JsonUnserializableInterface, ClientAwareInterface
 {
     use NoRequestResponseTrait;
     use JsonSerializableTrait;
     use JsonResponseTrait;
     use ClientAwareTrait;
 
-    public const WEBHOOK_ANSWER = 'answer';
-    public const WEBHOOK_EVENT = 'event';
+    const WEBHOOK_ANSWER = 'answer';
+    const WEBHOOK_EVENT  = 'event';
 
-    public const TIMER_LENGTH = 'length';
-    public const TIMER_RINGING = 'ringing';
+    const TIMER_LENGTH  = 'length';
+    const TIMER_RINGING = 'ringing';
 
-    public const TIMEOUT_MACHINE = 'machine';
+    const TIMEOUT_MACHINE = 'machine';
 
-    /**
-     * @var string|null
-     */
     protected $id;
 
-    /**
-     * @var Endpoint|string|null
-     */
     protected $to;
 
-    /**
-     * @var Endpoint|string|null
-     */
     protected $from;
 
     /**
-     * @var array
+     * @var Webhook[]
      */
     protected $webhooks = [];
 
-    /**
-     * @var array
-     */
     protected $data = [];
 
-    /**
-     * @var array
-     */
     protected $subresources = [];
 
-    public function __construct(?string $id = null)
+    public function __construct($id = null)
     {
         trigger_error(
             'Vonage\Call\Call is deprecated, please use Vonage\Voice\Client for functionality instead',
@@ -103,13 +73,7 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
         $this->id = $id;
     }
 
-    /**
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     * @throws ClientExceptionInterface
-     */
-    public function get(): self
+    public function get()
     {
         $request = new Request(
             $this->getClient()->getApiUrl() . Collection::getCollectionPath() . '/' . $this->getId(),
@@ -118,7 +82,7 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
 
         $response = $this->getClient()->send($request);
 
-        if ((int)$response->getStatusCode() !== 200) {
+        if ($response->getStatusCode() != '200') {
             throw $this->getException($response);
         }
 
@@ -128,32 +92,23 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
         return $this;
     }
 
-    /**
-     * @return ClientException\Exception|ClientException\Request|ClientException\Server
-     */
     protected function getException(ResponseInterface $response)
     {
         $body = json_decode($response->getBody()->getContents(), true);
         $status = $response->getStatusCode();
 
-        if ($status >= 400 && $status < 500) {
-            $e = new ClientException\Request($body['error_title'], $status);
-        } elseif ($status >= 500 && $status < 600) {
-            $e = new ClientException\Server($body['error_title'], $status);
+        if ($status >= 400 and $status < 500) {
+            $e = new Exception\Request($body['error_title'], $status);
+        } elseif ($status >= 500 and $status < 600) {
+            $e = new Exception\Server($body['error_title'], $status);
         } else {
-            $e = new ClientException\Exception('Unexpected HTTP Status Code');
+            $e = new Exception\Exception('Unexpected HTTP Status Code');
         }
 
         return $e;
     }
 
-    /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
-    public function put($payload): self
+    public function put($payload)
     {
         $request = new Request(
             $this->getClient()->getApiUrl() . Collection::getCollectionPath() . '/' . $this->getId(),
@@ -164,24 +119,21 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
 
         $request->getBody()->write(json_encode($payload));
         $response = $this->client->send($request);
-        $responseCode = (int)$response->getStatusCode();
 
-        if ($responseCode !== 200 && $responseCode !== 204) {
+        $responseCode = $response->getStatusCode();
+        if ($responseCode != '200' && $responseCode != '204') {
             throw $this->getException($response);
         }
 
         return $this;
     }
 
-    public function getId(): ?string
+    public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * @param Endpoint|string|null $endpoint
-     */
-    public function setTo($endpoint): self
+    public function setTo($endpoint)
     {
         if (!($endpoint instanceof Endpoint)) {
             $endpoint = new Endpoint($endpoint);
@@ -192,12 +144,9 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
     }
 
     /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
+     * @return Endpoint
      */
-    public function getTo(): Endpoint
+    public function getTo()
     {
         if ($this->lazyLoad()) {
             return new Endpoint($this->data['to']['number'], $this->data['to']['type']);
@@ -206,29 +155,20 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
         return $this->to;
     }
 
-    /**
-     * @param Endpoint|string|null $endpoint
-     *
-     * @return $this
-     */
-    public function setFrom($endpoint): self
+    public function setFrom($endpoint)
     {
         if (!($endpoint instanceof Endpoint)) {
             $endpoint = new Endpoint($endpoint);
         }
 
         $this->from = $endpoint;
-
         return $this;
     }
 
     /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
+     * @return Endpoint
      */
-    public function getFrom(): Endpoint
+    public function getFrom()
     {
         if ($this->lazyLoad()) {
             return new Endpoint($this->data['from']['number'], $this->data['from']['type']);
@@ -237,90 +177,56 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
         return $this->from;
     }
 
-    public function setWebhook($type, ?string $url = null, string $method = null): ?self
+    public function setWebhook($type, $url = null, $method = null)
     {
         if ($type instanceof Webhook) {
             $this->webhooks[$type->getType()] = $type;
-
             return $this;
         }
 
         if (is_null($url)) {
-            throw new InvalidArgumentException('must provide `Vonage\Call\Webhook` object, ' .
-                'or a type and url: missing url');
+            throw new \InvalidArgumentException('must provide `Vonage\Call\Webhook` object, or a type and url: missing url');
         }
 
         $this->webhooks[$type] = new Webhook($type, $url, $method);
-
         return $this;
     }
 
-    /**
-     * @param string|int $length
-     */
-    public function setTimer(string $type, $length): void
+    public function setTimer($type, $length)
     {
         $this->data[$type . '_timer'] = $length;
     }
 
-    /**
-     * @param string|int $length
-     */
-    public function setTimeout(string $type, $length): void
+    public function setTimeout($type, $length)
     {
         $this->data[$type . '_timeout'] = $length;
     }
 
-    public function setNcco($ncco): self
+    public function setNcco($ncco)
     {
         $this->data['ncco'] = $ncco;
-
         return $this;
     }
 
-    /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
     public function getStatus()
     {
         if ($this->lazyLoad()) {
             return $this->data['status'];
         }
-
-        return null;
     }
 
-    /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
     public function getDirection()
     {
         if ($this->lazyLoad()) {
             return $this->data['direction'];
         }
-
-        return null;
     }
 
-    /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
-    public function getConversation(): ?Conversation
+    public function getConversation()
     {
         if ($this->lazyLoad()) {
             return new Conversation($this->data['conversation_uuid']);
         }
-
-        return null;
     }
 
     /**
@@ -328,32 +234,23 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
      *
      * Will attempt to load the data if it's not already.
      *
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
+     * @return bool
      */
-    protected function lazyLoad(): bool
+    protected function lazyLoad()
     {
         if (!empty($this->data)) {
             return true;
         }
 
         if (isset($this->id)) {
-            $this->get();
-
+            $this->get($this);
             return true;
         }
 
         return false;
     }
 
-    /**
-     * @param $name
-     *
-     * @noinspection MagicMethodsValidityInspection
-     */
-    public function __get(string $name)
+    public function __get($name)
     {
         switch ($name) {
             case 'stream':
@@ -361,14 +258,10 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
             case 'dtmf':
                 return $this->lazySubresource(ucfirst($name));
             default:
-                throw new RuntimeException('property does not exist: ' . $name);
+                throw new \RuntimeException('property does not exist: ' . $name);
         }
     }
 
-    /**
-     * @param $name
-     * @param $arguments
-     */
     public function __call($name, $arguments)
     {
         switch ($name) {
@@ -378,7 +271,7 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
                 $entity = $this->lazySubresource(ucfirst($name));
                 return call_user_func_array($entity, $arguments);
             default:
-                throw new RuntimeException('method does not exist: ' . $name);
+                throw new \RuntimeException('method does not exist: ' . $name);
         }
     }
 
@@ -394,27 +287,26 @@ class Call implements EntityInterface, JsonSerializable, JsonUnserializableInter
         return $this->subresources[$type];
     }
 
-    public function jsonSerialize(): array
+    public function jsonSerialize()
     {
-        $dataA = $this->data;
-        $dataB = [];
+        $data = $this->data;
 
         if (isset($this->to)) {
-            $dataA['to'] = [$this->to->jsonSerialize()];
+            $data['to'] = [$this->to->jsonSerialize()];
         }
 
         if (isset($this->from)) {
-            $dataA['from'] = $this->from->jsonSerialize();
+            $data['from'] = $this->from->jsonSerialize();
         }
 
         foreach ($this->webhooks as $webhook) {
-            $dataB[] = $webhook->jsonSerialize();
+            $data = array_merge($data, $webhook->jsonSerialize());
         }
 
-        return array_merge($dataA, $dataB);
+        return $data;
     }
 
-    public function jsonUnserialize(array $json): void
+    public function jsonUnserialize(array $json)
     {
         $this->data = $json;
         $this->id = $json['uuid'];

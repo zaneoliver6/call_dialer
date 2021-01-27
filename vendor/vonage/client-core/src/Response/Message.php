@@ -1,26 +1,18 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Response;
 
-use RuntimeException;
-
 class Message
 {
-    /**
-     * @var array
-     */
     protected $data;
 
-    public function __construct(array $data)
+    public function __construct($data)
     {
         $this->data = $data;
     }
@@ -55,7 +47,7 @@ class Message
         return $this->checkData('network');
     }
 
-    public function getErrorMessage(): string
+    public function getErrorMessage()
     {
         if (!isset($this->data['error-text'])) {
             return '';
@@ -64,19 +56,16 @@ class Message
         return $this->checkData('error-text');
     }
 
-    /**
-     * @param $param
-     */
     protected function checkData($param)
     {
         if (!isset($this->data[$param])) {
-            throw new RuntimeException('tried to access ' . $param . ' but data is missing');
+            throw new \RuntimeException('tried to access ' . $param . ' but data is missing');
         }
 
         return $this->data[$param];
     }
 
-    public function toArray(): array
+    public function toArray()
     {
         return $this->data;
     }

@@ -1,84 +1,82 @@
 <?php
 
-/**
- * Vonage Client Library for PHP
- *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
- */
-
-declare(strict_types=1);
-
 namespace Vonage\Insights;
 
-use ArrayAccess;
-use JsonSerializable;
-use Vonage\Client\Exception\Exception as ClientException;
+use Vonage\Client\Exception\Exception;
 use Vonage\Entity\Hydrator\ArrayHydrateInterface;
 use Vonage\Entity\JsonUnserializableInterface;
 
-use function get_class;
-use function trigger_error;
-
-class Basic implements JsonSerializable, JsonUnserializableInterface, ArrayAccess, ArrayHydrateInterface
+class Basic implements \JsonSerializable, JsonUnserializableInterface, \ArrayAccess, ArrayHydrateInterface
 {
     protected $data = [];
 
-    /**
-     * @param $number
-     */
     public function __construct($number)
     {
         $this->data['national_format_number'] = $number;
     }
 
-    public function getRequestId(): string
+    /**
+     * @return string
+     */
+    public function getRequestId()
     {
         return $this->data['request_id'];
     }
 
-    public function getNationalFormatNumber(): string
+    /**
+     * @return string
+     */
+    public function getNationalFormatNumber()
     {
         return $this->data['national_format_number'];
     }
 
-    public function getInternationalFormatNumber(): string
+    /**
+     * @return string
+     */
+    public function getInternationalFormatNumber()
     {
         return $this->data['international_format_number'];
     }
 
-    public function getCountryCode(): string
+    /**
+     * @return string
+     */
+    public function getCountryCode()
     {
         return $this->data['country_code'];
     }
 
-    public function getCountryCodeISO3(): string
+    /**
+     * @return string
+     */
+    public function getCountryCodeISO3()
     {
         return $this->data['country_code_iso3'];
     }
 
-    public function getCountryName(): string
+    /**
+     * @return string
+     */
+    public function getCountryName()
     {
         return $this->data['country_name'];
     }
 
-    public function getCountryPrefix(): int
+    /**
+     * @return integer
+     */
+    public function getCountryPrefix()
     {
         return $this->data['country_prefix'];
     }
 
-    /**
-     * @return array|mixed
-     */
     public function jsonSerialize()
     {
         return $this->toArray();
     }
 
-    /**
-     * @return void|null
-     */
-    public function jsonUnserialize(array $json): void
+    public function jsonUnserialize(array $json)
     {
         trigger_error(
             get_class($this) . "::jsonUnserialize is deprecated, please fromArray() instead",
@@ -88,7 +86,7 @@ class Basic implements JsonSerializable, JsonUnserializableInterface, ArrayAcces
         $this->fromArray($json);
     }
 
-    public function offsetExists($offset): bool
+    public function offsetExists($offset)
     {
         trigger_error(
             "Array access for " . get_class($this) . " is deprecated, please use getter methods",
@@ -108,23 +106,17 @@ class Basic implements JsonSerializable, JsonUnserializableInterface, ArrayAcces
         return $this->data[$offset];
     }
 
-    /**
-     * @throws ClientException
-     */
-    public function offsetSet($offset, $value): void
+    public function offsetSet($offset, $value)
     {
-        throw new ClientException('Number insights results are read only');
+        throw new Exception('Number insights results are read only');
     }
 
-    /**
-     * @throws ClientException
-     */
-    public function offsetUnset($offset): void
+    public function offsetUnset($offset)
     {
-        throw new ClientException('Number insights results are read only');
+        throw new Exception('Number insights results are read only');
     }
 
-    public function fromArray(array $data): void
+    public function fromArray(array $data)
     {
         $this->data = $data;
     }

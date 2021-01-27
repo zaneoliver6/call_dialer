@@ -1,12 +1,4 @@
 <?php
-
-/**
- * Vonage Client Library for PHP
- *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
- */
-
 declare(strict_types=1);
 
 namespace Vonage\Voice\Endpoint;
@@ -23,7 +15,7 @@ class VBC implements EndpointInterface
         $this->id = $extension;
     }
 
-    public static function factory(string $extension): VBC
+    public static function factory(string $extension) : VBC
     {
         return new VBC($extension);
     }
@@ -31,7 +23,7 @@ class VBC implements EndpointInterface
     /**
      * @return array{type: string, user: string}
      */
-    public function jsonSerialize(): array
+    public function jsonSerialize()
     {
         return $this->toArray();
     }
@@ -39,7 +31,7 @@ class VBC implements EndpointInterface
     /**
      * @return array{type: string, user: string}
      */
-    public function toArray(): array
+    public function toArray() : array
     {
         return [
             'type' => 'vbc',
@@ -47,7 +39,10 @@ class VBC implements EndpointInterface
         ];
     }
 
-    public function getId(): string
+    /**
+     * @return string
+     */
+    public function getId() : string
     {
         return $this->id;
     }

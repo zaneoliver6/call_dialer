@@ -1,37 +1,26 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Call;
 
-use ArrayAccess;
-use Laminas\Diactoros\Request;
-use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Message\ResponseInterface;
-use RuntimeException;
 use Vonage\Client\ClientAwareInterface;
 use Vonage\Client\ClientAwareTrait;
-use Vonage\Client\Exception as ClientException;
+use Vonage\Conversations\Conversation;
 use Vonage\Entity\CollectionInterface;
 use Vonage\Entity\CollectionTrait;
-
-use function is_callable;
-use function is_object;
-use function json_decode;
-use function json_encode;
-use function trigger_error;
+use Psr\Http\Message\ResponseInterface;
+use Zend\Diactoros\Request;
+use Vonage\Client\Exception;
 
 /**
  * @deprecated Please use Vonage\Voice\Client for this functionality
  */
-class Collection implements ClientAwareInterface, CollectionInterface, ArrayAccess
+class Collection implements ClientAwareInterface, CollectionInterface, \ArrayAccess
 {
     use ClientAwareTrait;
     use CollectionTrait;
@@ -44,17 +33,17 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         );
     }
 
-    public static function getCollectionName(): string
+    public static function getCollectionName()
     {
         return 'calls';
     }
 
-    public static function getCollectionPath(): string
+    public static function getCollectionPath()
     {
         return '/v1/' . self::getCollectionName();
     }
 
-    public function hydrateEntity($data, $idOrCall): Call
+    public function hydrateEntity($data, $idOrCall)
     {
         if (!($idOrCall instanceof Call)) {
             $idOrCall = new Call($idOrCall);
@@ -66,34 +55,26 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         return $idOrCall;
     }
 
-    public function __invoke($filter = null): self
+    /**
+     * @param null $callOrFilter
+     * @return $this|Call
+     */
+    public function __invoke($filter = null)
     {
         /** Fix for the smarter MapFactory in v2.2.0 and the uniqueness of this class interface */
-        if ($filter instanceof Filter) {
+        if (!is_null($filter) && $filter instanceof Filter) {
             $this->setFilter($filter);
         }
 
         return $this;
     }
 
-    /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
-    public function create($call): Call
+    public function create($call)
     {
         return $this->post($call);
     }
 
-    /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
-    public function put($payload, $idOrCall): Call
+    public function put($payload, $idOrCall)
     {
         if (!($idOrCall instanceof Call)) {
             $idOrCall = new Call($idOrCall);
@@ -101,19 +82,12 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
 
         $idOrCall->setClient($this->getClient());
         $idOrCall->put($payload);
-
         return $idOrCall;
     }
 
-    /**
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     * @throws ClientExceptionInterface
-     */
-    public function delete($call, $type): Call
+    public function delete($call = null, $type)
     {
-        if (is_object($call) && is_callable([$call, 'getId'])) {
+        if (is_object($call) and is_callable([$call, 'getId'])) {
             $call = $call->getId();
         }
 
@@ -122,26 +96,20 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         }
 
         $request = new Request(
-            $this->getClient()->getApiUrl() . self::getCollectionPath() . '/' . $call->getId() . '/' . $type,
+            $this->getClient()->getApiUrl() . $this->getCollectionPath() . '/' . $call->getId() . '/' . $type,
             'DELETE'
         );
 
         $response = $this->client->send($request);
 
-        if ((int)$response->getStatusCode() !== 204) {
+        if ($response->getStatusCode() != '204') {
             throw $this->getException($response);
         }
 
         return $call;
     }
 
-    /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
-    public function post($call): Call
+    public function post($call)
     {
         if ($call instanceof Call) {
             $body = $call->getRequestData();
@@ -150,7 +118,7 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         }
 
         $request = new Request(
-            $this->getClient()->getApiUrl() . self::getCollectionPath(),
+            $this->getClient()->getApiUrl() . $this->getCollectionPath(),
             'POST',
             'php://temp',
             ['content-type' => 'application/json']
@@ -159,10 +127,9 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         $request->getBody()->write(json_encode($body));
         $response = $this->client->send($request);
 
-        if ((int)$response->getStatusCode() !== 201) {
+        if ($response->getStatusCode() != '201') {
             $e = $this->getException($response);
             $e->setRequest($request);
-
             throw $e;
         }
 
@@ -174,13 +141,7 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         return $call;
     }
 
-    /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
-    public function get($call): Call
+    public function get($call)
     {
         if (!($call instanceof Call)) {
             $call = new Call($call);
@@ -192,11 +153,6 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         return $call;
     }
 
-    /**
-     * @throws ClientException\Exception
-     *
-     * @return ClientException\Request|ClientException\Server
-     */
     protected function getException(ResponseInterface $response)
     {
         $body = json_decode($response->getBody()->getContents(), true);
@@ -207,46 +163,56 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         // both cases
 
         // This message isn't very useful, but we shouldn't ever see it
-        $errorTitle = $body['error_title'] ?? $body['title'] ?? 'Unexpected error';
+        $errorTitle = 'Unexpected error';
 
-        if ($status >= 400 && $status < 500) {
-            $e = new ClientException\Request($errorTitle, $status);
-        } elseif ($status >= 500 && $status < 600) {
-            $e = new ClientException\Server($errorTitle, $status);
+        if (isset($body['title'])) {
+            $errorTitle = $body['title'];
+        }
+
+        if (isset($body['error_title'])) {
+            $errorTitle = $body['error_title'];
+        }
+
+        if ($status >= 400 and $status < 500) {
+            $e = new Exception\Request($errorTitle, $status);
+        } elseif ($status >= 500 and $status < 600) {
+            $e = new Exception\Server($errorTitle, $status);
         } else {
-            $e = new ClientException\Exception('Unexpected HTTP Status Code');
+            $e = new Exception\Exception('Unexpected HTTP Status Code');
             throw $e;
         }
 
         $e->setResponse($response);
-
         return $e;
     }
 
-    public function offsetExists($offset): bool
+    public function offsetExists($offset)
     {
         //todo: validate form of id
         return true;
     }
 
-    public function offsetGet($call): Call
+    /**
+     * @param mixed $call
+     * @return Call
+     */
+    public function offsetGet($call)
     {
         if (!($call instanceof Call)) {
             $call = new Call($call);
         }
 
         $call->setClient($this->getClient());
-
         return $call;
     }
 
-    public function offsetSet($offset, $value): void
+    public function offsetSet($offset, $value)
     {
-        throw new RuntimeException('can not set collection properties');
+        throw new \RuntimeException('can not set collection properties');
     }
 
-    public function offsetUnset($offset): void
+    public function offsetUnset($offset)
     {
-        throw new RuntimeException('can not unset collection properties');
+        throw new \RuntimeException('can not unset collection properties');
     }
 }

@@ -1,57 +1,39 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2017 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Call;
 
-use ArrayAccess;
-use Laminas\Diactoros\Request;
-use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Message\ResponseInterface;
-use RuntimeException;
+use Vonage\Call\Collection;
 use Vonage\Client\ClientAwareInterface;
 use Vonage\Client\ClientAwareTrait;
-use Vonage\Client\Exception as ClientException;
 use Vonage\Entity\JsonSerializableInterface;
-
-use function in_array;
-use function is_null;
-use function json_decode;
-use function json_encode;
-use function trigger_error;
+use Psr\Http\Message\ResponseInterface;
+use Zend\Diactoros\Request;
+use Vonage\Client\Exception;
 
 /**
  * Lightweight resource, only has put / delete.
  *
  * @deprecated Use Vonage\Voice\Client::playDTMF() method instead
  */
-class Dtmf implements JsonSerializableInterface, ClientAwareInterface, ArrayAccess
+class Dtmf implements JsonSerializableInterface, ClientAwareInterface, \ArrayAccess
 {
     use ClientAwareTrait;
 
-    /**
-     * @var string|null
-     */
     protected $id;
 
-    /**
-     * @var array
-     */
     protected $data = [];
 
-    /**
-     * @var string[]
-     */
-    protected $params = ['digits'];
+    protected $params= [
+        'digits'
+    ];
 
-    public function __construct(?string $id = null)
+    public function __construct($id = null)
     {
         trigger_error(
             'Vonage\Call\Dtmf is deprecated, please use Vonage\Voice\Client::playDTMF() instead',
@@ -61,15 +43,7 @@ class Dtmf implements JsonSerializableInterface, ClientAwareInterface, ArrayAcce
         $this->id = $id;
     }
 
-    /**
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     *
-     * @return $this|Event
-     */
-    public function __invoke(?self $entity = null)
+    public function __invoke(self $entity = null)
     {
         if (is_null($entity)) {
             return $this;
@@ -78,23 +52,17 @@ class Dtmf implements JsonSerializableInterface, ClientAwareInterface, ArrayAcce
         return $this->put($entity);
     }
 
-    public function getId(): ?string
+    public function getId()
     {
         return $this->id;
     }
 
-    public function setDigits($digits): void
+    public function setDigits($digits)
     {
-        $this->data['digits'] = (string)$digits;
+        $this->data['digits'] = (string) $digits;
     }
 
-    /**
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     * @throws ClientExceptionInterface
-     */
-    public function put(?self $dtmf = null): Event
+    public function put($dtmf = null)
     {
         if (!$dtmf) {
             $dtmf = $this;
@@ -109,58 +77,47 @@ class Dtmf implements JsonSerializableInterface, ClientAwareInterface, ArrayAcce
 
         $request->getBody()->write(json_encode($dtmf));
         $response = $this->client->send($request);
-
         return $this->parseEventResponse($response);
     }
 
-    /**
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
-    protected function parseEventResponse(ResponseInterface $response): Event
+    protected function parseEventResponse(ResponseInterface $response)
     {
-        if ((int)$response->getStatusCode() !== 200) {
+        if ($response->getStatusCode() != '200') {
             throw $this->getException($response);
         }
 
         $json = json_decode($response->getBody()->getContents(), true);
 
         if (!$json) {
-            throw new ClientException\Exception('Unexpected Response Body Format');
+            throw new Exception\Exception('Unexpected Response Body Format');
         }
 
         return new Event($json);
     }
 
-    /**
-     * @throws ClientException\Exception
-     *
-     * @return ClientException\Request|ClientException\Server
-     */
     protected function getException(ResponseInterface $response)
     {
         $body = json_decode($response->getBody()->getContents(), true);
         $status = $response->getStatusCode();
 
-        if ($status >= 400 && $status < 500) {
-            $e = new ClientException\Request($body['error_title'], $status);
-        } elseif ($status >= 500 && $status < 600) {
-            $e = new ClientException\Server($body['error_title'], $status);
+        if ($status >= 400 and $status < 500) {
+            $e = new Exception\Request($body['error_title'], $status);
+        } elseif ($status >= 500 and $status < 600) {
+            $e = new Exception\Server($body['error_title'], $status);
         } else {
-            $e = new ClientException\Exception('Unexpected HTTP Status Code');
+            $e = new Exception\Exception('Unexpected HTTP Status Code');
             throw $e;
         }
 
         return $e;
     }
 
-    public function jsonSerialize(): array
+    public function jsonSerialize()
     {
         return $this->data;
     }
 
-    public function offsetExists($offset): bool
+    public function offsetExists($offset)
     {
         return isset($this->data[$offset]);
     }
@@ -170,19 +127,19 @@ class Dtmf implements JsonSerializableInterface, ClientAwareInterface, ArrayAcce
         return $this->data[$offset];
     }
 
-    public function offsetSet($offset, $value): void
+    public function offsetSet($offset, $value)
     {
-        if (!in_array($offset, $this->params, false)) {
-            throw new RuntimeException('invalid parameter: ' . $offset);
+        if (!in_array($offset, $this->params)) {
+            throw new \RuntimeException('invalid parameter: ' . $offset);
         }
 
         $this->data[$offset] = $value;
     }
 
-    public function offsetUnset($offset): void
+    public function offsetUnset($offset)
     {
-        if (!in_array($offset, $this->params, false)) {
-            throw new RuntimeException('invalid parameter: ' . $offset);
+        if (!in_array($offset, $this->params)) {
+            throw new \RuntimeException('invalid parameter: ' . $offset);
         }
 
         unset($this->data[$offset]);

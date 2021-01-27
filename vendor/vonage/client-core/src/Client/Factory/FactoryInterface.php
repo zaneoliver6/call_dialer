@@ -1,13 +1,10 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Client\Factory;
 
@@ -19,7 +16,15 @@ namespace Vonage\Client\Factory;
  */
 interface FactoryInterface
 {
-    public function hasApi(string $api): bool;
+    /**
+     * @param $api
+     * @return bool
+     */
+    public function hasApi($api);
 
-    public function getApi(string $api);
+    /**
+     * @param $api
+     * @return mixed
+     */
+    public function getApi($api);
 }

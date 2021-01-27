@@ -1,40 +1,22 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Client\Callback;
 
-use InvalidArgumentException;
-use RuntimeException;
-
-use function array_diff;
-use function array_keys;
-use function array_merge;
-use function implode;
-use function strtolower;
-
 class Callback implements CallbackInterface
 {
-    public const ENV_ALL = 'all';
-    public const ENV_POST = 'post';
-    public const ENV_GET = 'get';
+    const ENV_ALL =  'all';
+    const ENV_POST = 'post';
+    const ENV_GET  = 'get';
 
-    /**
-     * @var array
-     */
-    protected $expected = [];
-
-    /**
-     * @var array
-     */
+    protected $expected = array();
     protected $data;
+
 
     public function __construct(array $data)
     {
@@ -42,21 +24,18 @@ class Callback implements CallbackInterface
         $missing = array_diff($this->expected, $keys);
 
         if ($missing) {
-            throw new RuntimeException('missing expected callback keys: ' . implode(', ', $missing));
+            throw new \RuntimeException('missing expected callback keys: ' . implode(', ', $missing));
         }
 
         $this->data = $data;
     }
 
-    public function getData(): array
+    public function getData()
     {
         return $this->data;
     }
 
-    /**
-     * @return Callback|callable
-     */
-    public static function fromEnv(string $source = self::ENV_ALL)
+    public static function fromEnv($source = self::ENV_ALL)
     {
         switch (strtolower($source)) {
             case 'post':
@@ -69,7 +48,7 @@ class Callback implements CallbackInterface
                 $data = array_merge($_GET, $_POST);
                 break;
             default:
-                throw new InvalidArgumentException('invalid source: ' . $source);
+                throw new \InvalidArgumentException('invalid source: ' . $source);
         }
 
         return new static($data);

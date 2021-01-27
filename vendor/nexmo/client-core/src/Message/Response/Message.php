@@ -1,23 +1,18 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Message\Response;
 
-use UnexpectedValueException;
 use Vonage\Client\Response\Response;
+use Vonage\Client\Response\ResponseInterface;
 use Vonage\Message\Callback\Receipt;
 
-use function array_merge;
-
-class Message extends Response
+class Message extends Response implements ResponseInterface
 {
     /**
      * @var Receipt
@@ -26,16 +21,16 @@ class Message extends Response
 
     public function __construct(array $data, Receipt $receipt = null)
     {
-        $this->expected = [
+        $this->expected = array(
             'status',
             'message-id',
             'to',
             'message-price',
             'network'
-        ];
+        );
 
         //default value
-        $data = array_merge(['client-ref' => null, 'remaining-balance' => null], $data);
+        $data = array_merge(array('client-ref' => null, 'remaining-balance' => null), $data);
 
         $return = parent::__construct($data);
 
@@ -44,8 +39,8 @@ class Message extends Response
             return $return;
         }
 
-        if ($receipt->getId() !== $this->getId()) {
-            throw new UnexpectedValueException('receipt id must match message id');
+        if ($receipt->getId() != $this->getId()) {
+            throw new \UnexpectedValueException('receipt id must match message id');
         }
 
         $this->receipt = $receipt;
@@ -53,47 +48,74 @@ class Message extends Response
         return $receipt;
     }
 
-    public function getStatus(): int
+    /**
+     * @return int
+     */
+    public function getStatus()
     {
-        return (int)$this->data['status'];
+        return (int) $this->data['status'];
     }
 
-    public function getId(): string
+    /**
+     * @return string
+     */
+    public function getId()
     {
-        return (string)$this->data['message-id'];
+        return (string) $this->data['message-id'];
     }
 
-    public function getTo(): string
+    /**
+     * @return string
+     */
+    public function getTo()
     {
-        return (string)$this->data['to'];
+        return (string) $this->data['to'];
     }
 
-    public function getBalance(): string
+    /**
+     * @return string
+     */
+    public function getBalance()
     {
-        return (string)$this->data['remaining-balance'];
+        return (string) $this->data['remaining-balance'];
     }
 
-    public function getPrice(): string
+    /**
+     * @return string
+     */
+    public function getPrice()
     {
-        return (string)$this->data['message-price'];
+        return (string) $this->data['message-price'];
     }
 
-    public function getNetwork(): string
+    /**
+     * @return string
+     */
+    public function getNetwork()
     {
-        return (string)$this->data['network'];
+        return (string) $this->data['network'];
     }
 
-    public function getClientRef(): string
+    /**
+     * @return string
+     */
+    public function getClientRef()
     {
-        return (string)$this->data['client-ref'];
+        return (string) $this->data['client-ref'];
     }
 
-    public function getReceipt(): ?Receipt
+    /**
+     * @return Receipt|null
+     */
+    public function getReceipt()
     {
         return $this->receipt;
     }
 
-    public function hasReceipt(): bool
+    /**
+     * @return bool
+     */
+    public function hasReceipt()
     {
         return $this->receipt instanceof Receipt;
     }
