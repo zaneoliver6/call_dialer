@@ -1,39 +1,28 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2018 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Conversations;
 
-use ArrayAccess;
-use Exception;
-use Laminas\Diactoros\Request;
-use Psr\Http\Client\ClientExceptionInterface;
-use Psr\Http\Message\ResponseInterface;
-use RuntimeException;
 use Vonage\Client\ClientAwareInterface;
 use Vonage\Client\ClientAwareTrait;
-use Vonage\Client\Exception as ClientException;
 use Vonage\Entity\CollectionInterface;
 use Vonage\Entity\CollectionTrait;
 use Vonage\Entity\JsonResponseTrait;
 use Vonage\Entity\JsonSerializableTrait;
 use Vonage\Entity\NoRequestResponseTrait;
-
-use function is_null;
-use function json_decode;
-use function json_encode;
+use Psr\Http\Message\ResponseInterface;
+use Zend\Diactoros\Request;
+use Vonage\Client\Exception;
 
 /**
  * @deprecated Conversations is not released for General Availability and will be removed in a future release
  */
-class Collection implements ClientAwareInterface, CollectionInterface, ArrayAccess
+class Collection implements ClientAwareInterface, CollectionInterface, \ArrayAccess
 {
     use ClientAwareTrait;
     use CollectionTrait;
@@ -41,22 +30,16 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
     use NoRequestResponseTrait;
     use JsonResponseTrait;
 
-    public static function getCollectionName(): string
+    public static function getCollectionName()
     {
         return 'conversations';
     }
 
-    public static function getCollectionPath(): string
+    public static function getCollectionPath()
     {
         return '/beta/' . self::getCollectionName();
     }
 
-    /**
-     * @param $data
-     * @param $idOrConversation
-     *
-     * @return mixed|Conversation
-     */
     public function hydrateEntity($data, $idOrConversation)
     {
         if (!($idOrConversation instanceof Conversation)) {
@@ -69,13 +52,9 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         return $idOrConversation;
     }
 
-    /**
-     * @param $conversations
-     */
-    public function hydrateAll($conversations): array
+    public function hydrateAll($conversations)
     {
         $hydrated = [];
-
         foreach ($conversations as $conversation) {
             $hydrated[] = $this->hydrateEntity($conversation, $conversation['id']);
         }
@@ -84,9 +63,10 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
     }
 
     /**
-     * @return $this
+     * @param null $conversation
+     * @return $this|Conversation
      */
-    public function __invoke($filter = null)
+    public function __invoke(Filter $filter = null)
     {
         if (!is_null($filter)) {
             $this->setFilter($filter);
@@ -95,29 +75,12 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         return $this;
     }
 
-    /**
-     * @param $conversation
-     *
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
-    public function create($conversation): Conversation
+    public function create($conversation)
     {
         return $this->post($conversation);
     }
 
-    /**
-     * @param $conversation
-     *
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     * @throws ClientExceptionInterface
-     * @throws Exception
-     */
-    public function post($conversation): Conversation
+    public function post($conversation)
     {
         if ($conversation instanceof Conversation) {
             $body = $conversation->getRequestData();
@@ -126,7 +89,7 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         }
 
         $request = new Request(
-            $this->getClient()->getApiUrl() . self::getCollectionPath(),
+            $this->getClient()->getApiUrl() . $this->getCollectionPath(),
             'POST',
             'php://temp',
             ['content-type' => 'application/json']
@@ -135,7 +98,7 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         $request->getBody()->write(json_encode($body));
         $response = $this->getClient()->send($request);
 
-        if ((int)$response->getStatusCode() !== 200) {
+        if ($response->getStatusCode() != '200') {
             throw $this->getException($response);
         }
 
@@ -147,15 +110,7 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         return $conversation;
     }
 
-    /**
-     * @param $conversation
-     *
-     * @throws ClientExceptionInterface
-     * @throws ClientException\Exception
-     * @throws ClientException\Request
-     * @throws ClientException\Server
-     */
-    public function get($conversation): Conversation
+    public function get($conversation)
     {
         if (!($conversation instanceof Conversation)) {
             $conversation = new Conversation($conversation);
@@ -167,37 +122,44 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         return $conversation;
     }
 
-    /**
-     * @throws ClientException\Exception
-     *
-     * @return ClientException\Request|ClientException\Server
-     */
     protected function getException(ResponseInterface $response)
     {
         $body = json_decode($response->getBody()->getContents(), true);
         $status = $response->getStatusCode();
 
         // This message isn't very useful, but we shouldn't ever see it
-        $errorTitle = $body['error_title'] ?? $body['description'] ?? 'Unexpected error';
+        $errorTitle = 'Unexpected error';
 
-        if ($status >= 400 && $status < 500) {
-            $e = new ClientException\Request($errorTitle, $status);
-        } elseif ($status >= 500 && $status < 600) {
-            $e = new ClientException\Server($errorTitle, $status);
+        if (isset($body['description'])) {
+            $errorTitle = $body['description'];
+        }
+
+        if (isset($body['error_title'])) {
+            $errorTitle = $body['error_title'];
+        }
+
+        if ($status >= 400 and $status < 500) {
+            $e = new Exception\Request($errorTitle, $status);
+        } elseif ($status >= 500 and $status < 600) {
+            $e = new Exception\Server($errorTitle, $status);
         } else {
-            $e = new ClientException\Exception('Unexpected HTTP Status Code');
+            $e = new Exception\Exception('Unexpected HTTP Status Code');
             throw $e;
         }
 
         return $e;
     }
 
-    public function offsetExists($offset): bool
+    public function offsetExists($offset)
     {
         return true;
     }
 
-    public function offsetGet($conversation): Conversation
+    /**
+     * @param mixed $conversation
+     * @return Conversation
+     */
+    public function offsetGet($conversation)
     {
         if (!($conversation instanceof Conversation)) {
             $conversation = new Conversation($conversation);
@@ -207,13 +169,13 @@ class Collection implements ClientAwareInterface, CollectionInterface, ArrayAcce
         return $conversation;
     }
 
-    public function offsetSet($offset, $value): void
+    public function offsetSet($offset, $value)
     {
-        throw new RuntimeException('can not set collection properties');
+        throw new \RuntimeException('can not set collection properties');
     }
 
-    public function offsetUnset($offset): void
+    public function offsetUnset($offset)
     {
-        throw new RuntimeException('can not unset collection properties');
+        throw new \RuntimeException('can not unset collection properties');
     }
 }

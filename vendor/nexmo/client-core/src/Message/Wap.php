@@ -1,71 +1,64 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
 
-declare(strict_types=1);
-
 namespace Vonage\Message;
-
-use Vonage\Client\Exception\Exception as ClientException;
-
-use function array_merge;
 
 /**
  * SMS Binary Message
  */
 class Wap extends Message
 {
-    public const TYPE = 'wappush';
-
+    const TYPE = 'wappush';
+    
     /**
      * Message Title
-     *
      * @var string
      */
     protected $title;
-
+    
     /**
      * Message URL
-     *
      * @var string
      */
     protected $url;
-
+    
     /**
-     * Message Timeout
-     *
+     * Message Timeoupt
      * @var int
      */
     protected $validity;
 
     /**
      * Create a new SMS text message.
+     *
+     * @param string $to
+     * @param string $from
+     * @param string $title
+     * @param string $url
+     * @param int $validity
      */
-    public function __construct(string $to, string $from, string $title, string $url, int $validity)
+    public function __construct($to, $from, $title, $url, $validity)
     {
         parent::__construct($to, $from);
-
-        $this->title = $title;
-        $this->url = $url;
-        $this->validity = $validity;
+        $this->title    = (string) $title;
+        $this->url      =  (string) $url;
+        $this->validity = (int) $validity;
     }
-
+    
     /**
      * Get an array of params to use in an API request.
-     *
-     * @throws ClientException
      */
-    public function getRequestData(bool $sent = true): array
+    public function getRequestData($sent = true)
     {
-        return array_merge(parent::getRequestData($sent), [
-            'title' => $this->title,
-            'url' => $this->url,
-            'validity' => $this->validity,
-        ]);
+        return array_merge(parent::getRequestData($sent), array(
+            'title'      => $this->title,
+            'url'        => $this->url,
+            'validity'   => $this->validity,
+        ));
     }
 }

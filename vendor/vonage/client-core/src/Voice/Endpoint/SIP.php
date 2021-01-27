@@ -1,12 +1,4 @@
 <?php
-
-/**
- * Vonage Client Library for PHP
- *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
- */
-
 declare(strict_types=1);
 
 namespace Vonage\Voice\Endpoint;
@@ -29,15 +21,16 @@ class SIP implements EndpointInterface
         $this->setHeaders($headers);
     }
 
-    public static function factory(string $uri, array $headers = []): SIP
+    public static function factory(string $uri, array $headers = []) : SIP
     {
-        return new SIP($uri, $headers);
+        $endpoint = new SIP($uri, $headers);
+        return $endpoint;
     }
 
     /**
      * @return array{type: string, uri: string, headers?: array<string, string>}
      */
-    public function jsonSerialize(): array
+    public function jsonSerialize()
     {
         return $this->toArray();
     }
@@ -45,7 +38,7 @@ class SIP implements EndpointInterface
     /**
      * @return array{type: string, uri: string, headers?: array<string, string>}
      */
-    public function toArray(): array
+    public function toArray() : array
     {
         $data = [
             'type' => 'sip',
@@ -59,33 +52,28 @@ class SIP implements EndpointInterface
         return $data;
     }
 
-    public function getId(): string
+    /**
+     * @return string
+     */
+    public function getId() : string
     {
         return $this->id;
     }
 
-    public function getHeaders(): array
+    public function getHeaders() : array
     {
         return $this->headers;
     }
 
-    /**
-     * @return $this
-     */
-    public function addHeader(string $key, string $value): self
+    public function addHeader(string $key, string $value) : self
     {
         $this->headers[$key] = $value;
-
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    public function setHeaders(array $headers): self
+    public function setHeaders(array $headers) : self
     {
         $this->headers = $headers;
-
         return $this;
     }
 }

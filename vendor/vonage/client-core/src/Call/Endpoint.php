@@ -1,21 +1,12 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
 
-declare(strict_types=1);
-
 namespace Vonage\Call;
-
-use JsonSerializable;
-use RuntimeException;
-
-use function array_merge;
-use function trigger_error;
 
 /**
  * Class Endpoint
@@ -25,26 +16,17 @@ use function trigger_error;
  *
  * @deprecated Please use Vonage\Voice\Endpoint\Phone instead
  */
-class Endpoint implements JsonSerializable
+class Endpoint implements \JsonSerializable
 {
-    public const PHONE = 'phone';
+    const PHONE = 'phone';
 
-    /**
-     * @var string|null
-     */
     protected $id;
 
-    /**
-     * @var string
-     */
     protected $type;
 
-    /**
-     * @var array
-     */
     protected $additional;
 
-    public function __construct(?string $id, string $type = self::PHONE, array $additional = [])
+    public function __construct($id, $type = self::PHONE, $additional = [])
     {
         trigger_error(
             'Vonage\Call\Endpoint is deprecated, please use Vonage\Voice\Endpoint\Phone instead',
@@ -56,54 +38,56 @@ class Endpoint implements JsonSerializable
         $this->additional = $additional;
     }
 
-    public function getType(): string
+    public function getType()
     {
         return $this->type;
     }
 
-    public function getId(): ?string
+    public function getId()
     {
         return $this->id;
     }
 
-    public function set($property, $value): self
+    public function set($property, $value)
     {
         $this->additional[$property] = $value;
-
         return $this;
     }
 
     public function get($property)
     {
-        return $this->additional[$property] ?? null;
+        if (isset($this->additional[$property])) {
+            return $this->additional[$property];
+        }
     }
 
-    public function getNumber(): ?string
+    public function getNumber()
     {
-        if (!self::PHONE === $this->type) {
-            throw new RuntimeException('number not defined for this type');
+        if (!self::PHONE == $this->type) {
+            throw new \RuntimeException('number not defined for this type');
         }
 
         return $this->getId();
     }
 
-    public function __toString(): string
+    public function __toString()
     {
-        return (string)$this->getId();
+        return (string) $this->getId();
     }
 
-    public function jsonSerialize(): ?array
+    public function jsonSerialize()
     {
-        if ($this->type === 'phone') {
-            return array_merge(
-                $this->additional,
-                [
-                    'type' => $this->type,
-                    'number' => $this->id
-                ]
-            );
+        switch ($this->type) {
+            case 'phone':
+                return array_merge(
+                    $this->additional,
+                    [
+                        'type' => $this->type,
+                        'number' => $this->id
+                    ]
+                );
+            default:
+                throw new \RuntimeException('unknown type: ' . $this->type);
         }
-
-        throw new RuntimeException('unknown type: ' . $this->type);
     }
 }

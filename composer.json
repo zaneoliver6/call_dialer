@@ -1,9 +1,4 @@
 {
-    "autoload": {
-        "psr-4": {
-            "MyApp\\": "app"
-        }
-    },
     "require": {
         "nexmo/client": "^2.4",
         "vonage/client": "^2.4",

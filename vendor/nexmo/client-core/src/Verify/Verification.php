@@ -1,44 +1,22 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Verify;
 
-use ArrayAccess;
-use DateTime;
-use Exception;
-use Laminas\Diactoros\Request\Serializer as RequestSerializer;
-use Laminas\Diactoros\Response\Serializer as ResponseSerializer;
-use Psr\Http\Client\ClientExceptionInterface;
-use RuntimeException;
-use Serializable;
-use Vonage\Client\Exception\Exception as ClientException;
 use Vonage\Client\Exception\Request as RequestException;
-use Vonage\Client\Exception\Server as ServerException;
 use Vonage\Entity\Hydrator\ArrayHydrateInterface;
 use Vonage\Entity\JsonResponseTrait;
 use Vonage\Entity\Psr7Trait;
 use Vonage\Entity\RequestArrayTrait;
 
-use function array_merge;
-use function get_class;
-use function is_null;
-use function serialize;
-use function sprintf;
-use function trigger_error;
-use function unserialize;
-
-class Verification implements VerificationInterface, ArrayAccess, Serializable, ArrayHydrateInterface
+class Verification implements VerificationInterface, \ArrayAccess, \Serializable, ArrayHydrateInterface
 {
     use Psr7Trait;
-
     /**
      * @deprecated
      */
@@ -48,45 +26,41 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
     /**
      * Possible verification statuses.
      */
-    public const FAILED = 'FAILED';
-    public const SUCCESSFUL = 'SUCCESSFUL';
-    public const EXPIRED = 'EXPIRED';
-    public const IN_PROGRESS = 'IN PROGRESS';
+    const FAILED = 'FAILED';
+    const SUCCESSFUL = 'SUCCESSFUL';
+    const EXPIRED = 'EXPIRED';
+    const IN_PROGRESS = 'IN PROGRESS';
 
     protected $dirty = true;
 
     /**
      * @deprecated Use the Vonage\Verify\Client instead to interact with the API
-     *
      * @var Client;
      */
     protected $client;
 
     /**
-     * Verification constructor.
-     *
      * Create a verification with a number and brand, or the `request_id` of an existing verification.
-     * Note that in the future, this constructor will accept only the ID as the first parameter.
+     * Note that in the future, this constructor will accept only the ID as the first parameter
      *
-     * @param $idOrNumber
-     * @param $brand
-     * @param array $additional
+     * @param string $idOrNumber The number to verify, or the `request_id` of an existing verification.
+     * @param null|string $brand The brand that identifies your application to the user.
+     * @param array $additional Additional parameters can be set as keys / values.
      */
-    public function __construct($idOrNumber, $brand = null, array $additional = [])
+    public function __construct($idOrNumber, $brand = null, $additional = [])
     {
         if (is_null($brand)) {
             $this->dirty = false;
             $this->requestData['request_id'] = $idOrNumber;
         } else {
             trigger_error(
-                'Using ' . get_class($this) . ' for starting a verification is deprecated, ' .
-                'please use Vonage\Verify\Request instead',
+                'Using ' . get_class($this) . ' for starting a verification is deprecated, please use Vonage\Verify\Request instead',
                 E_USER_DEPRECATED
             );
 
             $this->dirty = true;
             $this->requestData['number'] = $idOrNumber;
-            $this->requestData['brand'] = $brand;
+            $this->requestData['brand']  = $brand;
             $this->requestData = array_merge($this->requestData, $additional);
         }
     }
@@ -94,66 +68,54 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
     /**
      * Allow Verification to have actions.
      *
+     * @deprecated Use the Vonage\Verfication\Client service object directly
      * @param Client $client Verify Client
-     *
      * @return $this
-     *
-     * @deprecated Use the Vonage\Verification\Client service object directly
      */
-    public function setClient(Client $client): self
+    public function setClient(Client $client)
     {
         trigger_error(
-            'Setting a client directly on a Verification object is deprecated, ' .
-            'please use the Vonage\Verification\Client service object directly',
+            'Setting a client directly on a Verification object is deprecated, please use the Vonage\Verfication\Client service object directly',
             E_USER_DEPRECATED
         );
-
         $this->client = $client;
-
         return $this;
     }
 
     /**
      * @deprecated Use the Vonage\Verification\Client service object directly
+     * @return Client
      */
-    protected function useClient(): ?Client
+    protected function useClient()
     {
         if (isset($this->client)) {
             return $this->client;
         }
 
-        throw new RuntimeException('can not act on the verification directly unless a verify client has been set');
+        throw new \RuntimeException('can not act on the verification directly unless a verify client has been set');
     }
 
     /**
      * Check if the code is correct. Unlike the method it proxies, an invalid code does not throw an exception.
      *
-     * @param $code
-     * @param $ip
-     *
-     * @throws ClientException
+     * @deprecated Use Vonage\Verfication\Client::check()
+     * @uses \Vonage\Verify\Client::check()
+     * @param string $code Numeric code provided by the user.
+     * @param null|string $ip IP address to be used for the verification.
+     * @return bool Code is valid.
      * @throws RequestException
-     * @throws ServerException
-     * @throws ClientExceptionInterface
      */
-    public function check($code, $ip = null): ?bool
+    public function check($code, $ip = null)
     {
         trigger_error(
-            'Vonage\Verify\Verification::check() is deprecated, use Vonage\Verification\Client::check()',
+            'Vonage\Verify\Verification::check() is deprecated, use Vonage\Verfication\Client::check()',
             E_USER_DEPRECATED
         );
         try {
-            if (null !== $this->useClient()) {
-                $this->useClient()->check($this, $code, $ip);
-
-                return true;
-            }
-
-            return false;
+            $this->useClient()->check($this, $code, $ip);
+            return true;
         } catch (RequestException $e) {
-            $code = $e->getCode();
-
-            if ($code === 16 || $code === 17) {
+            if ($e->getCode() == 16 || $e->getCode() == 17) {
                 return false;
             }
 
@@ -164,82 +126,60 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
     /**
      * Cancel the verification.
      *
-     * @throws ClientExceptionInterface
-     * @throws ClientException
-     * @throws RequestException
-     * @throws ServerException
-     *
-     * @deprecated Use Vonage\Verification\Client::cancel()
+     * @deprecated Use Vonage\Verfication\Client::cancel()
+     * @uses \Vonage\Verify\Client::cancel()
      */
-    public function cancel(): void
+    public function cancel()
     {
         trigger_error(
-            'Vonage\Verify\Verification::cancel() is deprecated, use Vonage\Verification\Client::cancel()',
+            'Vonage\Verify\Verification::cancel() is deprecated, use Vonage\Verfication\Client::cancel()',
             E_USER_DEPRECATED
         );
-
-        if (null !== $this->useClient()) {
-            $this->useClient()->cancel($this);
-        }
+        $this->useClient()->cancel($this);
     }
 
     /**
      * Trigger the next verification.
      *
-     * @throws ClientExceptionInterface
-     * @throws ClientException
-     * @throws RequestException
-     * @throws ServerException
-     *
-     * @deprecated Use Vonage\Verification\Client::trigger()
+     * @deprecated Use Vonage\Verfication\Client::trigger()
+     * @uses \Vonage\Verify\Client::trigger()
      */
-    public function trigger(): void
+    public function trigger()
     {
         trigger_error(
-            'Vonage\Verify\Verification::trigger() is deprecated, use Vonage\Verification\Client::trigger()',
+            'Vonage\Verify\Verification::trigger() is deprecated, use Vonage\Verfication\Client::trigger()',
             E_USER_DEPRECATED
         );
-
-        if (null !== $this->useClient()) {
-            $this->useClient()->trigger($this);
-        }
+        $this->useClient()->trigger($this);
     }
 
     /**
      * Update Verification from the API.
      *
-     * @throws ClientExceptionInterface
-     * @throws ClientException
-     * @throws RequestException
-     * @throws ServerException
-     *
-     * @deprecated Use Vonage\Verification\Client::get() to retrieve the object directly
+     * @deprecated Use Vonage\Verfication\Client::get() to retrieve the object directly
+     * @uses \Vonage\Verify\Client::search()
      */
-    public function sync(): void
+    public function sync()
     {
         trigger_error(
-            'Vonage\Verify\Verification::sync() is deprecated, ' .
-            'use Vonage\Verification\Client::search() to get a new copy of this object',
+            'Vonage\Verify\Verification::sync() is deprecated, use Vonage\Verfication\Client::search() to get a new copy of this object',
             E_USER_DEPRECATED
         );
-
-        if (null !== $this->useClient()) {
-            $this->useClient()->search($this);
-        }
+        $this->useClient()->search($this);
     }
 
     /**
-     * Check if the user provided data has sent to the API yet
+     * Check if the user provided data has sent to the API yet.
      *
      * @deprecated This object will not hold this information in the future
+     * @return bool
      */
-    public function isDirty(): bool
+    public function isDirty()
     {
         trigger_error(
             'Vonage\Verify\Verification::isDirty() is deprecated',
             E_USER_DEPRECATED
         );
-
         return $this->dirty;
     }
 
@@ -247,16 +187,14 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * If do not set number in international format or you are not sure if number is correctly formatted, set country
      * with the two-character country code. For example, GB, US. Verify works out the international phone number for
      * you.
+     * @link https://docs.nexmo.com/verify/api-reference/api-reference#vrequest
      *
      * Can only be set before the verification is created.
-     *
-     * @link https://developer.nexmo.com/verify/overview#vrequest
+     * @uses \Vonage\Entity\RequestArrayTrait::setRequestData
      *
      * @param $country
-     *
-     * @throws Exception
-     *
-     * @return RequestArrayTrait|Verification
+     * @return $this
+     * @throws \Exception
      */
     public function setCountry($country)
     {
@@ -266,16 +204,14 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
     /**
      * An 11 character alphanumeric string to specify the SenderID for SMS sent by Verify. Depending on the destination
      * of the phone number you are applying, restrictions may apply. By default, sender_id is VERIFY.
+     * @link https://docs.nexmo.com/verify/api-reference/api-reference#vrequest
      *
      * Can only be set before the verification is created.
-     *
-     * @link https://developer.nexmo.com/verify/overview#vrequest
+     * @uses \Vonage\Entity\RequestArrayTrait::setRequestData
      *
      * @param $id
-     *
-     * @throws Exception
-     *
-     * @return RequestArrayTrait|Verification
+     * @return $this
+     * @throws \Exception
      */
     public function setSenderId($id)
     {
@@ -284,16 +220,14 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
 
     /**
      * The length of the PIN. Possible values are 6 or 4 characters. The default value is 4.
+     * @link https://docs.nexmo.com/verify/api-reference/api-reference#vrequest
      *
      * Can only be set before the verification is created.
-     *
-     * @link https://developer.nexmo.com/verify/overview#vrequest
+     * @uses \Vonage\Entity\RequestArrayTrait::setRequestData
      *
      * @param $length
-     *
-     * @throws Exception
-     *
-     * @return RequestArrayTrait|Verification
+     * @return $this
+     * @throws \Exception
      */
     public function setCodeLength($length)
     {
@@ -304,16 +238,14 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * By default, TTS are generated in the locale that matches number. For example, the TTS for a 33* number is sent in
      * French. Use this parameter to explicitly control the language, accent and gender used for the Verify request. The
      * default language is en-us.
+     * @link https://docs.nexmo.com/verify/api-reference/api-reference#vrequest
      *
      * Can only be set before the verification is created.
-     *
-     * @link https://developer.nexmo.com/verify/overview#vrequest
+     * @uses \Vonage\Entity\RequestArrayTrait::setRequestData
      *
      * @param $language
-     *
-     * @throws Exception
-     *
-     * @return RequestArrayTrait|Verification
+     * @return $this
+     * @throws \Exception
      */
     public function setLanguage($language)
     {
@@ -326,17 +258,15 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * - Mobile
      * - Landline
      *
-     * Note: contact support@vonage.com to enable this feature.
+     * Note: contact support@Vonage.com to enable this feature.
+     * @link https://docs.nexmo.com/verify/api-reference/api-reference#vrequest
      *
      * Can only be set before the verification is created.
-     *
-     * @link https://developer.nexmo.com/verify/overview#vrequest
+     * @uses \Vonage\Entity\RequestArrayTrait::setRequestData
      *
      * @param $type
-     *
-     * @throws Exception
-     *
-     * @return RequestArrayTrait|Verification
+     * @return $this
+     * @throws \Exception
      */
     public function setRequireType($type)
     {
@@ -347,16 +277,14 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * The PIN validity time from generation. This is an integer value between 30 and 3600 seconds. The default is 300
      * seconds. When specified together, pin_expiry must be an integer multiple of next_event_wait. Otherwise,
      * pin_expiry is set to next_event_wait.
+     * @link https://docs.nexmo.com/verify/api-reference/api-reference#vrequest
      *
      * Can only be set before the verification is created.
-     *
-     * @link https://developer.nexmo.com/verify/overview#vrequest
+     * @uses \Vonage\Entity\RequestArrayTrait::setRequestData
      *
      * @param $time
-     *
-     * @throws Exception
-     *
-     * @return RequestArrayTrait|Verification
+     * @return $this
+     * @throws \Exception
      */
     public function setPinExpiry($time)
     {
@@ -366,16 +294,14 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
     /**
      * An integer value between 60 and 900 seconds inclusive that specifies the wait time between attempts to deliver
      * the PIN. Verify calculates the default value based on the average time taken by users to complete verification.
+     * @link https://docs.nexmo.com/verify/api-reference/api-reference#vrequest
      *
      * Can only be set before the verification is created.
-     *
-     * @link https://developer.nexmo.com/verify/overview#vrequest
+     * @uses \Vonage\Entity\RequestArrayTrait::setRequestData
      *
      * @param $time
-     *
-     * @throws Exception
-     *
-     * @return RequestArrayTrait|Verification
+     * @return $this
+     * @throws \Exception
      */
     public function setWaitTime($time)
     {
@@ -384,16 +310,13 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
 
     /**
      * Which workflow to use, default is 1 for SMS -> TTS -> TTS
-     *
-     * Can only be set before the verification is created.
-     *
      * @link https://developer.nexmo.com/verify/guides/workflows-and-events
      *
-     * @param $workflow_id
+     * Can only be set before the verification is created.
+     * @uses \Vonage\Entity\RequestArrayTrait::setRequestData
      *
-     * @throws Exception
-     *
-     * @return RequestArrayTrait|Verification
+     * @param int $workflow_id Which workflow to use
+     * @return $this
      */
     public function setWorkflowId($workflow_id)
     {
@@ -402,6 +325,10 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
 
     /**
      * Get the verification request id, if available.
+     *
+     * @uses \Vonage\Verify\Verification::proxyArrayAccess()
+     *
+     * @return string|null
      */
     public function getRequestId()
     {
@@ -411,7 +338,10 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
     /**
      * Get the number verified / to be verified.
      *
-     * @see  \Vonage\Verify\Verification::__construct()
+     * @see \Vonage\Verify\Verification::__construct()
+     * @uses \Vonage\Verify\Verification::proxyArrayAccess()
+     *
+     * @return string|null
      */
     public function getNumber()
     {
@@ -422,10 +352,13 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * Get the account id, if available.
      *
      * Only available after a searching for a verification.
+     * @see \Vonage\Verify\Client::search();
      *
-     * @see \Vonage\Verify\Client::search()
+     * However still @uses \Vonage\Verify\Verification::proxyArrayAccess()
+     *
+     * @return string|null
      */
-    public function getAccountId(): ?string
+    public function getAccountId()
     {
         return $this->proxyArrayAccess('account_id');
     }
@@ -433,8 +366,12 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
     /**
      * Get the sender id, if available.
      *
-     * @see  \Vonage\Verify\Verification::setSenderId();
-     * @see  \Vonage\Verify\Client::search();
+     * @see \Vonage\Verify\Verification::setSenderId();
+     * @see \Vonage\Verify\Client::search();
+     *
+     * @uses \Vonage\Verify\Verification::proxyArrayAccess()
+     *
+     * @return string|null
      */
     public function getSenderId()
     {
@@ -445,8 +382,11 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * Get the price of the verification, if available.
      *
      * Only available after a searching for a verification.
-     *
      * @see \Vonage\Verify\Client::search();
+     *
+     * However still @uses \Vonage\Verify\Verification::proxyArrayAccess()
+     *
+     * @return string|null
      */
     public function getPrice()
     {
@@ -457,8 +397,11 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * Get the currency used to price the verification, if available.
      *
      * Only available after a searching for a verification.
-     *
      * @see \Vonage\Verify\Client::search();
+     *
+     * However still @uses \Vonage\Verify\Verification::proxyArrayAccess()
+     *
+     * @return string|null
      */
     public function getCurrency()
     {
@@ -469,8 +412,11 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * Get the status of the verification, if available.
      *
      * Only available after a searching for a verification.
-     *
      * @see \Vonage\Verify\Client::search();
+     *
+     * However still @uses \Vonage\Verify\Verification::proxyArrayAccess()
+     *
+     * @return string|null
      */
     public function getStatus()
     {
@@ -482,8 +428,11 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * the data is not available.
      *
      * Only available after a searching for a verification.
-     *
      * @see \Vonage\Verify\Client::search();
+     *
+     * However still @uses \Vonage\Verify\Verification::proxyArrayAccess()
+     *
+     * @return \Vonage\Verify\Check[]|\Vonage\Verify\Check
      */
     public function getChecks()
     {
@@ -503,10 +452,11 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * Get the date the verification started.
      *
      * Only available after a searching for a verification.
-     *
-     * @throws Exception
-     *
      * @see \Vonage\Verify\Client::search();
+     *
+     * However still @uses \Vonage\Verify\Verification::proxyArrayAccessDate()
+     *
+     * @return \DateTime|null
      */
     public function getSubmitted()
     {
@@ -517,10 +467,11 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * Get the date the verification stopped.
      *
      * Only available after a searching for a verification.
-     *
-     * @throws Exception
-     *
      * @see \Vonage\Verify\Client::search();
+     *
+     * However still @uses \Vonage\Verify\Verification::proxyArrayAccessDate()
+     *
+     * @return \DateTime|null
      */
     public function getFinalized()
     {
@@ -531,10 +482,11 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * Get the date of the first verification event.
      *
      * Only available after a searching for a verification.
-     *
-     * @throws Exception
-     *
      * @see \Vonage\Verify\Client::search();
+     *
+     * However still @uses \Vonage\Verify\Verification::proxyArrayAccessDate()
+     *
+     * @return \DateTime|null
      */
     public function getFirstEvent()
     {
@@ -545,10 +497,11 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * Get the date of the last verification event.
      *
      * Only available after a searching for a verification.
-     *
-     * @throws Exception
-     *
      * @see \Vonage\Verify\Client::search();
+     *
+     * However still @uses \Vonage\Verify\Verification::proxyArrayAccessDate()
+     *
+     * @return \DateTime|null
      */
     public function getLastEvent()
     {
@@ -557,58 +510,54 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
 
     /**
      * Proxies `proxyArrayAccess()` and returns a DateTime if the parameter is found.
+     * @uses \Vonage\Verify\Verification::proxyArrayAccess()
      *
-     * @param $param
-     *
-     * @throws Exception
+     * @param string $param Parameter to look for.
+     * @return \DateTime
      */
-    protected function proxyArrayAccessDate($param): ?DateTime
+    protected function proxyArrayAccessDate($param)
     {
         $date = $this->proxyArrayAccess($param);
-
         if ($date) {
-            return new DateTime($date);
+            return new \DateTime($date);
         }
-
-        return null;
     }
 
     /**
      * Simply proxies array access to check for a parameter in the response, request, or user provided data.
      *
-     * @param $param
+     * @uses \Vonage\Verify\Verification::offsetGet();
+     * @uses \Vonage\Verify\Verification::offsetExists();
      *
-     * @return mixed|null
+     * @param string $param Parameter to look for.
+     * @return mixed
      */
     protected function proxyArrayAccess($param)
     {
         $value = @$this[$param];
-
         if (isset($value)) {
             return @$this[$param];
         }
-
-        return null;
     }
 
     /**
      * Allow the object to access the data from the API response, a sent API request, or the user set data that the
      * request will be created from - in that order.
      *
-     * @throws ClientException
-     * @throws Exception
+     * @deprecated Array access will be removed in the future
+     * @param mixed $offset
+     * @return bool
+     * @throws \Exception
      */
-    public function offsetExists($offset): bool
+    public function offsetExists($offset)
     {
         trigger_error(
             'Using Vonage\Verify\Verification as an array is deprecated',
             E_USER_DEPRECATED
         );
-
         $response = $this->getResponseData();
-        $request = $this->getRequestData();
-        $dirty = $this->requestData;
-
+        $request  = $this->getRequestData();
+        $dirty    = $this->requestData;
         return isset($response[$offset]) || isset($request[$offset]) || isset($dirty[$offset]);
     }
 
@@ -616,10 +565,10 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
      * Allow the object to access the data from the API response, a sent API request, or the user set data that the
      * request will be created from - in that order.
      *
-     * @throws ClientException
-     * @throws Exception
-     *
-     * @return mixed|null
+     * @deprecated Array access will be removed in the future
+     * @param mixed $offset
+     * @return mixed
+     * @throws \Exception
      */
     public function offsetGet($offset)
     {
@@ -627,105 +576,123 @@ class Verification implements VerificationInterface, ArrayAccess, Serializable, 
             'Using Vonage\Verify\Verification as an array is deprecated',
             E_USER_DEPRECATED
         );
-
         $response = $this->getResponseData();
-        $request = $this->getRequestData();
-        $dirty = $this->requestData;
+        $request  = $this->getRequestData();
+        $dirty    = $this->requestData;
 
-        return $response[$offset] ?? $request[$offset] ?? $dirty[$offset] ?? null;
+        if (isset($response[$offset])) {
+            return $response[$offset];
+        }
+
+        if (isset($request[$offset])) {
+            return $request[$offset];
+        }
+
+        if (isset($dirty[$offset])) {
+            return $dirty[$offset];
+        }
     }
 
     /**
      * All properties are read only.
+     *
+     * @deprecated Array access will be removed in the future
+     * @param mixed $offset
+     * @param mixed $value
      */
-    public function offsetSet($offset, $value): void
+    public function offsetSet($offset, $value)
     {
         trigger_error(
             'Using Vonage\Verify\Verification as an array is deprecated',
             E_USER_DEPRECATED
         );
-
         throw $this->getReadOnlyException($offset);
     }
 
     /**
      * All properties are read only.
+     *
+     * @deprecated Array access will be removed in the future
+     * @param mixed $offset
      */
-    public function offsetUnset($offset): void
+    public function offsetUnset($offset)
     {
         trigger_error(
             'Using Vonage\Verify\Verification as an array is deprecated',
             E_USER_DEPRECATED
         );
-
         throw $this->getReadOnlyException($offset);
     }
 
     /**
      * All properties are read only.
+     *
+     * @deprecated Array access will be removed in the future
+     * @param string $offset
+     * @return \RuntimeException
      */
-    protected function getReadOnlyException(string $offset): RuntimeException
+    protected function getReadOnlyException(string $offset)
     {
         trigger_error(
             'Using Vonage\Verify\Verification as an array is deprecated',
             E_USER_DEPRECATED
         );
-
-        return new RuntimeException(
-            sprintf(
-                'can not modify `%s` using array access',
-                $offset
-            )
-        );
+        return new \RuntimeException(sprintf(
+            'can not modify `%s` using array access',
+            $offset
+        ));
     }
 
-    public function serialize(): string
+    /**
+     * @todo Will need updated with the Laminas namespace
+     */
+    public function serialize()
     {
         $data = [
-            'requestData' => $this->requestData
+            'requestData'  => $this->requestData
         ];
 
         if ($request = @$this->getRequest()) {
-            $data['request'] = RequestSerializer::toString($request);
+            $data['request'] = \Zend\Diactoros\Request\Serializer::toString($request);
         }
 
         if ($response = @$this->getResponse()) {
-            $data['response'] = ResponseSerializer::toString($response);
+            $data['response'] = \Zend\Diactoros\Response\Serializer::toString($response);
         }
 
         return serialize($data);
     }
 
     /**
-     * @param $serialized
+     * @todo Will need updated with the Laminas namespace
      */
-    public function unserialize($serialized): void
+    public function unserialize($serialized)
     {
-        $data = unserialize($serialized, [true]);
+        $data = unserialize($serialized);
 
         $this->requestData = $data['requestData'];
 
         if (isset($data['request'])) {
-            $this->request = RequestSerializer::fromString($data['request']);
+            $this->request = \Zend\Diactoros\Request\Serializer::fromString($data['request']);
         }
 
         if (isset($data['response'])) {
-            $this->response = ResponseSerializer::fromString($data['response']);
+            $this->response = \Zend\Diactoros\Response\Serializer::fromString($data['response']);
         }
     }
 
     /**
-     * @return array<string>
+     * @return array<string, scalar>
      */
-    public function toArray(): array
+    public function toArray() : array
     {
         return $this->requestData;
     }
 
     /**
-     * @param array<string> $data
+     * @param array<string, scalar> $data
      */
-    public function fromArray(array $data): void
+    public function fromArray(array $data) : void
     {
         $this->requestData = $data;
     }

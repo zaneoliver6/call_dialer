@@ -1,30 +1,21 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Voice\Call;
 
 use Vonage\Client\Request\AbstractRequest;
-
-use function is_null;
+use Vonage\Client\Request\RequestInterface;
 
 /**
  * @deprecated This objects are no longer viable and will be removed in a future version
  */
-class Call extends AbstractRequest
+class Call extends AbstractRequest implements RequestInterface
 {
-    /**
-     * @param $url
-     * @param $to
-     * @param $from
-     */
     public function __construct($url, $to, $from = null)
     {
         $this->params['answer_url'] = $url;
@@ -35,16 +26,9 @@ class Call extends AbstractRequest
         }
     }
 
-    /**
-     * @param $url
-     * @param $method
-     *
-     * @return $this
-     */
-    public function setAnswer($url, $method = null): Call
+    public function setAnswer($url, $method = null)
     {
         $this->params['answer_url'] = $url;
-
         if (!is_null($method)) {
             $this->params['answer_method'] = $method;
         } else {
@@ -54,13 +38,7 @@ class Call extends AbstractRequest
         return $this;
     }
 
-    /**
-     * @param $url
-     * @param $method
-     *
-     * @return $this
-     */
-    public function setError($url, $method = null): Call
+    public function setError($url, $method = null)
     {
         $this->params['error_url'] = $url;
         if (!is_null($method)) {
@@ -72,13 +50,7 @@ class Call extends AbstractRequest
         return $this;
     }
 
-    /**
-     * @param $url
-     * @param $method
-     *
-     * @return $this
-     */
-    public function setStatus($url, $method = null): Call
+    public function setStatus($url, $method = null)
     {
         $this->params['status_url'] = $url;
         if (!is_null($method)) {
@@ -90,17 +62,12 @@ class Call extends AbstractRequest
         return $this;
     }
 
-    /**
-     * @param bool $hangup
-     * @param $timeout
-     *
-     * @return $this
-     */
-    public function setMachineDetection($hangup = true, $timeout = null): Call
+
+    public function setMachineDetection($hangup = true, $timeout = null)
     {
         $this->params['machine_detection'] = ($hangup ? 'hangup' : 'true');
         if (!is_null($timeout)) {
-            $this->params['machine_timeout'] = (int)$timeout;
+            $this->params['machine_timeout'] = (int) $timeout;
         } else {
             unset($this->params['machine_timeout']);
         }
@@ -108,7 +75,10 @@ class Call extends AbstractRequest
         return $this;
     }
 
-    public function getURI(): string
+    /**
+     * @return string
+     */
+    public function getURI()
     {
         return '/call/json';
     }

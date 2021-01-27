@@ -1,12 +1,4 @@
 <?php
-
-/**
- * Vonage Client Library for PHP
- *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
- */
-
 declare(strict_types=1);
 
 namespace Vonage\Voice;
@@ -16,9 +8,9 @@ namespace Vonage\Voice;
  */
 class CallAction
 {
-    public const EARMUFF = 'earmuff';
-    public const HANGUP = 'hangup';
-    public const MUTE = 'mute';
-    public const UNEARMUFF = 'unearmuff';
-    public const UNMUTE = 'unmute';
+    const EARMUFF = 'earmuff';
+    const HANGUP = 'hangup';
+    const MUTE = 'mute';
+    const UNEARMUFF = 'unearmuff';
+    const UNMUTE = 'unmute';
 }

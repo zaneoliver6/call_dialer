@@ -1,44 +1,28 @@
 <?php
-
-/**
- * Vonage Client Library for PHP
- *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
- */
-
 declare(strict_types=1);
 
 namespace Vonage\Voice\NCCO;
 
-use InvalidArgumentException;
-use Vonage\Voice\Endpoint\EndpointFactory;
-use Vonage\Voice\NCCO\Action\ActionInterface;
-use Vonage\Voice\NCCO\Action\Connect;
-use Vonage\Voice\NCCO\Action\Conversation;
+use Vonage\Voice\NCCO\Action\Talk;
 use Vonage\Voice\NCCO\Action\Input;
-use Vonage\Voice\NCCO\Action\Notify;
 use Vonage\Voice\NCCO\Action\Record;
 use Vonage\Voice\NCCO\Action\Stream;
-use Vonage\Voice\NCCO\Action\Talk;
+use Vonage\Voice\NCCO\Action\Connect;
+use Vonage\Voice\Endpoint\EndpointFactory;
+use Vonage\Voice\NCCO\Action\Conversation;
+use Vonage\Voice\NCCO\Action\ActionInterface;
+use Vonage\Voice\NCCO\Action\Notify;
 
 class NCCOFactory
 {
-    /**
-     * @param $data
-     */
-    public function build($data): ActionInterface
+    public function build($data) : ActionInterface
     {
         switch ($data['action']) {
             case 'connect':
                 $factory = new EndpointFactory();
                 $endpoint = $factory->create($data['endpoint'][0]);
 
-                if (null !== $endpoint) {
-                    return Connect::factory($endpoint);
-                }
-
-                throw new InvalidArgumentException("Malformed NCCO Action " . $data['endpoint'][0]);
+                return Connect::factory($endpoint, $data);
             case 'conversation':
                 return Conversation::factory($data['name'], $data);
             case 'input':
@@ -52,7 +36,7 @@ class NCCOFactory
             case 'talk':
                 return Talk::factory($data['text'], $data);
             default:
-                throw new InvalidArgumentException("Unknown NCCO Action " . $data['action']);
+                throw new \InvalidArgumentException("Unknown NCCO Action " . $data['action']);
         }
     }
 }

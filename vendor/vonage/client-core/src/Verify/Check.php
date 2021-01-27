@@ -1,26 +1,20 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
 
-declare(strict_types=1);
-
 namespace Vonage\Verify;
-
-use DateTime;
-use Exception;
 
 class Check
 {
     /**
      * Possible status of checking a code.
      */
-    public const VALID = 'VALID';
-    public const INVALID = 'INVALID';
+    const VALID = 'VALID';
+    const INVALID = 'INVALID';
 
     /**
      * @var array
@@ -37,12 +31,9 @@ class Check
         return $this->data['code'];
     }
 
-    /**
-     * @throws Exception
-     */
-    public function getDate(): DateTime
+    public function getDate()
     {
-        return new DateTime($this->data['date_received']);
+        return new \DateTime($this->data['date_received']);
     }
 
     public function getStatus()

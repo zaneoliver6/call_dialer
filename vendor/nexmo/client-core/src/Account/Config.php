@@ -1,29 +1,15 @@
 <?php
 
-/**
- * Vonage Client Library for PHP
- *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
- */
-
-declare(strict_types=1);
-
 namespace Vonage\Account;
 
 use ArrayAccess;
-use JsonSerializable;
-use Vonage\Client\Exception\Exception as ClientException;
+use Vonage\Client\Exception\Exception;
 use Vonage\Entity\Hydrator\ArrayHydrateInterface;
 use Vonage\Entity\JsonSerializableInterface;
 use Vonage\Entity\JsonUnserializableInterface;
 
-use function get_class;
-use function is_null;
-use function trigger_error;
-
 class Config implements
-    JsonSerializable,
+    \JsonSerializable,
     JsonSerializableInterface,
     JsonUnserializableInterface,
     ArrayAccess,
@@ -34,74 +20,51 @@ class Config implements
      */
     protected $data = [];
 
-    /**
-     * @param string|int|null $max_outbound_request
-     * @param string|int|null $max_inbound_request
-     * @param string|int|null $max_calls_per_second
-     */
-    public function __construct(
-        ?string $sms_callback_url = null,
-        ?string $dr_callback_url = null,
-        $max_outbound_request = null,
-        $max_inbound_request = null,
-        $max_calls_per_second = null
-    ) {
+    public function __construct($sms_callback_url = null, $dr_callback_url = null, $max_outbound_request = null, $max_inbound_request = null, $max_calls_per_second = null)
+    {
         if (!is_null($sms_callback_url)) {
             $this->data['sms_callback_url'] = $sms_callback_url;
         }
-
         if (!is_null($dr_callback_url)) {
             $this->data['dr_callback_url'] = $dr_callback_url;
         }
-
         if (!is_null($max_outbound_request)) {
             $this->data['max_outbound_request'] = $max_outbound_request;
         }
-
         if (!is_null($max_inbound_request)) {
             $this->data['max_inbound_request'] = $max_inbound_request;
         }
-
         if (!is_null($max_calls_per_second)) {
             $this->data['max_calls_per_second'] = $max_calls_per_second;
         }
     }
 
-    public function getSmsCallbackUrl(): ?string
+    public function getSmsCallbackUrl()
     {
         return $this->data['sms_callback_url'];
     }
 
-    public function getDrCallbackUrl(): ?string
+    public function getDrCallbackUrl()
     {
         return $this->data['dr_callback_url'];
     }
 
-    /**
-     * @return string|int|null
-     */
     public function getMaxOutboundRequest()
     {
         return $this->data['max_outbound_request'];
     }
 
-    /**
-     * @return string|int|null
-     */
     public function getMaxInboundRequest()
     {
         return $this->data['max_inbound_request'];
     }
 
-    /**
-     * @return string|int|null
-     */
     public function getMaxCallsPerSecond()
     {
         return $this->data['max_calls_per_second'];
     }
 
-    public function jsonUnserialize(array $json): void
+    public function jsonUnserialize(array $json)
     {
         trigger_error(
             get_class($this) . "::jsonUnserialize is deprecated, please fromArray() instead",
@@ -111,7 +74,7 @@ class Config implements
         $this->fromArray($json);
     }
 
-    public function fromArray(array $data): void
+    public function fromArray(array $data)
     {
         $this->data = [
             'sms_callback_url' => $data['sms_callback_url'],
@@ -122,7 +85,7 @@ class Config implements
         ];
     }
 
-    public function jsonSerialize(): array
+    public function jsonSerialize()
     {
         return $this->toArray();
     }
@@ -132,13 +95,12 @@ class Config implements
         return $this->data;
     }
 
-    public function offsetExists($offset): bool
+    public function offsetExists($offset)
     {
         trigger_error(
             "Array access for " . get_class($this) . " is deprecated, please use getter methods",
             E_USER_DEPRECATED
         );
-
         return isset($this->data[$offset]);
     }
 
@@ -148,40 +110,27 @@ class Config implements
             "Array access for " . get_class($this) . " is deprecated, please use getter methods",
             E_USER_DEPRECATED
         );
-
         return $this->data[$offset];
     }
 
-    /**
-     * @throws ClientException
-     */
-    public function offsetSet($offset, $value): void
+    public function offsetSet($offset, $value)
     {
-        throw new ClientException('Balance is read only');
+        throw new Exception('Balance is read only');
     }
 
-    /**
-     * @throws ClientException
-     */
-    public function offsetUnset($offset): void
+    public function offsetUnset($offset)
     {
-        throw new ClientException('Balance is read only');
+        throw new Exception('Balance is read only');
     }
 
-    /**
-     * @noinspection MagicMethodsValidityInspection
-     */
-    public function __get($key): ?array
+    public function __get($key)
     {
         if ($key === 'data') {
             trigger_error(
                 "Direct access to " . get_class($this) . "::data is deprecated, please use getter to toArray() methods",
                 E_USER_DEPRECATED
             );
-
             return $this->data;
         }
-
-        return null;
     }
 }

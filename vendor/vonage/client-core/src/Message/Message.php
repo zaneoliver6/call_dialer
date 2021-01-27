@@ -1,51 +1,34 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Message;
 
-use ArrayAccess;
-use Countable;
-use DateTime;
-use Exception;
-use Iterator;
-use RuntimeException;
-use Vonage\Client\Exception\Exception as ClientException;
 use Vonage\Entity\Hydrator\ArrayHydrateInterface;
+use Vonage\Message\EncodingDetector;
 use Vonage\Entity\JsonResponseTrait;
 use Vonage\Entity\Psr7Trait;
 use Vonage\Entity\RequestArrayTrait;
-
-use function array_merge;
-use function count;
-use function get_class;
-use function is_int;
-use function is_null;
-use function sprintf;
-use function trigger_error;
 
 /**
  * Abstract Message
  *
  * Extended by concrete message types (text, binary, etc).
  */
-class Message implements MessageInterface, Countable, ArrayAccess, Iterator, ArrayHydrateInterface
+class Message implements MessageInterface, \Countable, \ArrayAccess, \Iterator, ArrayHydrateInterface
 {
     use Psr7Trait;
     use JsonResponseTrait;
     use RequestArrayTrait;
     use CollectionTrait;
 
-    public const TYPE = null;
+    const TYPE = null;
 
-    public const CLASS_FLASH = 0;
+    const CLASS_FLASH = 0;
 
     protected $responseParams = [
         'status',
@@ -60,40 +43,35 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
 
     protected $id;
 
-    /**
-     * @var bool
-     */
     protected $autodetectEncoding = false;
 
     /**
-     * @var array
+     * @param string $idOrTo Message ID or E.164 (international) formatted number to send the message
+     * @param null|string $from Number or name the message is from
+     * @param array  $additional Additional API Params
      */
-    protected $data = [];
-
-    public function __construct(string $idOrTo, ?string $from = null, array $additional = [])
+    public function __construct($idOrTo, $from = null, $additional = [])
     {
         if (is_null($from)) {
             $this->id = $idOrTo;
-
             return;
         }
 
-        $this->requestData['to'] = $idOrTo;
-        $this->requestData['from'] = $from;
-
+        $this->requestData['to'] = (string) $idOrTo;
+        $this->requestData['from'] = (string) $from;
         if (static::TYPE) {
             $this->requestData['type'] = static::TYPE;
         }
-
+        
         $this->requestData = array_merge($this->requestData, $additional);
     }
 
     /**
      * Boolean indicating if you would like to receive a Delivery Receipt
      *
-     * @throws Exception
+     * @param bool $dlr
      */
-    public function requestDLR($dlr = true): self
+    public function requestDLR($dlr = true)
     {
         return $this->setRequestData('status-report-req', $dlr ? 1 : 0);
     }
@@ -102,31 +80,31 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
      * Webhook endpoint the delivery receipt is sent to for this message
      * This overrides the setting in the Dashboard, and should be a full URL
      *
-     * @throws Exception
+     * @param str $callback
      */
-    public function setCallback(string $callback): self
+    public function setCallback($callback)
     {
-        return $this->setRequestData('callback', $callback);
+        return $this->setRequestData('callback', (string) $callback);
     }
 
     /**
      * Optional reference of up to 40 characters
      *
-     * @throws Exception
+     * @param str $ref
      */
-    public function setClientRef(string $ref): self
+    public function setClientRef($ref)
     {
-        return $this->setRequestData('client-ref', $ref);
+        return $this->setRequestData('client-ref', (string) $ref);
     }
 
     /**
      * The Mobile Country Code Mobile Network Code (MCCMNC) this number is registered with
      *
-     * @throws Exception
+     * @param str $network
      */
-    public function setNetwork(string $network): self
+    public function setNetwork($network)
     {
-        return $this->setRequestData('network-code', $network);
+        return $this->setRequestData('network-code', (string) $network);
     }
 
     /**
@@ -135,41 +113,37 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
      * Vonage recommends no shorter than 30 minutes, and to keep at default
      * when possible.
      *
-     * @throws Exception
+     * @param int $ttl
      */
-    public function setTTL(int $ttl): self
+    public function setTTL($ttl)
     {
-        return $this->setRequestData('ttl', $ttl);
+        return $this->setRequestData('ttl', (int) $ttl);
     }
 
     /**
-     * The Data Coding Scheme value of this message
+     * The Data Coding Sceheme value of this message
      * Should be 0, 1, 2, or 3
      *
-     * @throws Exception
+     * @param int $class
      */
-    public function setClass(int $class): self
+    public function setClass($class)
     {
         return $this->setRequestData('message-class', $class);
     }
 
-    public function enableEncodingDetection(): void
+    public function enableEncodingDetection()
     {
         $this->autodetectEncoding = true;
     }
 
-    public function disableEncodingDetection(): void
+    public function disableEncodingDetection()
     {
         $this->autodetectEncoding = false;
     }
 
-    /**
-     * @throws Exception
-     */
-    public function count(): int
+    public function count()
     {
         $data = $this->getResponseData();
-
         if (!isset($data['messages'])) {
             return 0;
         }
@@ -177,41 +151,25 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         return count($data['messages']);
     }
 
-    /**
-     * @param null|mixed $index
-     *
-     * @throws Exception
-     */
-    public function getMessageId($index = null): ?string
+    public function getMessageId($index = null)
     {
-        return $this->id ?? $this->getMessageData('message-id', $index);
+        if (isset($this->id)) {
+            return $this->id;
+        }
+
+        return $this->getMessageData('message-id', $index);
     }
 
-    /**
-     * @param null|mixed $index
-     *
-     * @throws Exception
-     */
     public function getStatus($index = null)
     {
         return $this->getMessageData('status', $index);
     }
-
-    /**
-     * @param null|mixed $index
-     *
-     * @throws Exception
-     */
+    
     public function getFinalStatus($index = null)
     {
         return $this->getMessageData('final-status', $index);
     }
-
-    /**
-     * @param null|mixed $index
-     *
-     * @throws Exception
-     */
+    
     public function getTo($index = null)
     {
         $data = @$this->getResponseData();
@@ -225,21 +183,11 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         return $this->data['to'];
     }
 
-    /**
-     * @param null|mixed $index
-     *
-     * @throws Exception
-     */
     public function getRemainingBalance($index = null)
     {
         return $this->getMessageData('remaining-balance', $index);
     }
 
-    /**
-     * @param null|mixed $index
-     *
-     * @throws Exception
-     */
     public function getPrice($index = null)
     {
         $data = $this->getResponseData();
@@ -253,19 +201,11 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         return $this->data['price'];
     }
 
-    /**
-     * @param null|mixed $index
-     *
-     * @throws Exception
-     */
     public function getNetwork($index = null)
     {
         return $this->getMessageData('network', $index);
     }
 
-    /**
-     * @throws Exception
-     */
     public function getDeliveryStatus()
     {
         @$data = $this->getResponseData();
@@ -273,7 +213,7 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         //check if this is data from a send request
         //(which also has a status, but it's not the same)
         if (isset($data['messages'])) {
-            return null;
+            return;
         }
 
         return $this->data['status'];
@@ -289,12 +229,9 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         return $this->data['body'];
     }
 
-    /**
-     * @throws Exception
-     */
-    public function getDateReceived(): DateTime
+    public function getDateReceived()
     {
-        return new DateTime($this->data['date-received']);
+        return new \DateTime($this->data['date-received']);
     }
 
     public function getDeliveryError()
@@ -307,16 +244,11 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         return $this->data['error-code-label'];
     }
 
-    public function isEncodingDetectionEnabled(): bool
+    public function isEncodingDetectionEnabled()
     {
         return $this->autodetectEncoding;
     }
 
-    /**
-     * @param null|mixed $index
-     *
-     * @throws Exception
-     */
     protected function getMessageData($name, $index = null)
     {
         if (!isset($this->response)) {
@@ -324,19 +256,18 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         }
 
         $data = $this->getResponseData();
-
         if (is_null($index)) {
-            $index = $this->count() - 1;
+            $index = $this->count() -1;
         }
 
         if (isset($data['messages'])) {
             return $data['messages'][$index][$name];
         }
 
-        return $data[$name] ?? null;
+        return isset($data[$name]) ? $data[$name] : null;
     }
 
-    protected function preGetRequestDataHook(): void
+    protected function preGetRequestDataHook()
     {
         // If $autodetectEncoding is true, we want to set the `type`
         // field in our payload
@@ -345,15 +276,14 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         }
     }
 
-    protected function detectEncoding(): ?string
+    protected function detectEncoding()
     {
         if (!isset($this->requestData['text'])) {
             return static::TYPE;
         }
 
         // Auto detect unicode messages
-        $detector = new EncodingDetector();
-
+        $detector = new EncodingDetector;
         if ($detector->requiresUnicodeEncoding($this->requestData['text'])) {
             return Unicode::TYPE;
         }
@@ -361,26 +291,20 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         return static::TYPE;
     }
 
-    /**
-     * @throws ClientException
-     * @throws Exception
-     */
-    public function offsetExists($offset): bool
+    public function offsetExists($offset)
     {
         trigger_error(
             "Array access for " . get_class($this) . " is deprecated, please use getter methods",
             E_USER_DEPRECATED
         );
-
         $response = @$this->getResponseData();
 
         if (isset($this->index)) {
             $response = $response['items'][$this->index];
         }
 
-        $request = @$this->getRequestData();
-        $dirty = @$this->getRequestData(false);
-
+        $request  = @$this->getRequestData();
+        $dirty    = @$this->getRequestData(false);
         if (isset($response[$offset]) || isset($request[$offset]) || isset($dirty[$offset])) {
             return true;
         }
@@ -393,25 +317,20 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         return false;
     }
 
-    /**
-     * @throws ClientException
-     * @throws Exception
-     */
     public function offsetGet($offset)
     {
         trigger_error(
             "Array access for " . get_class($this) . " is deprecated, please use getter methods",
             E_USER_DEPRECATED
         );
-
         $response = @$this->getResponseData();
 
         if (isset($this->index)) {
             $response = $response['items'][$this->index];
         }
 
-        $request = @$this->getRequestData();
-        $dirty = @$this->getRequestData(false);
+        $request  = @$this->getRequestData();
+        $dirty    = @$this->getRequestData(false);
 
         if (isset($response[$offset])) {
             return $response[$offset];
@@ -423,39 +342,40 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
                 return $response['messages'][$offset];
             }
 
-            $index = $this->count() - 1;
+            $index = $this->count() -1;
 
-            if (isset($response['messages'][$index][$offset])) {
+            if (isset($response['messages'][$index]) && isset($response['messages'][$index][$offset])) {
                 return $response['messages'][$index][$offset];
             }
         }
 
-        return $request[$offset] ?? $dirty[$offset] ?? null;
+        if (isset($request[$offset])) {
+            return $request[$offset];
+        }
+
+        if (isset($dirty[$offset])) {
+            return $dirty[$offset];
+        }
     }
 
-    public function offsetSet($offset, $value): void
+    public function offsetSet($offset, $value)
     {
         throw $this->getReadOnlyException($offset);
     }
 
-    public function offsetUnset($offset): void
+    public function offsetUnset($offset)
     {
         throw $this->getReadOnlyException($offset);
     }
 
-    protected function getReadOnlyException($offset): RuntimeException
+    protected function getReadOnlyException($offset)
     {
-        return new RuntimeException(
-            sprintf(
-                'can not modify `%s` using array access',
-                $offset
-            )
-        );
+        return new \RuntimeException(sprintf(
+            'can not modify `%s` using array access',
+            $offset
+        ));
     }
 
-    /**
-     * @throws Exception
-     */
     public function current()
     {
         if (!isset($this->response)) {
@@ -466,7 +386,7 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         return $data['messages'][$this->current];
     }
 
-    public function next(): void
+    public function next()
     {
         $this->current++;
     }
@@ -480,10 +400,7 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         return $this->current;
     }
 
-    /**
-     * @throws Exception
-     */
-    public function valid(): ?bool
+    public function valid()
     {
         if (!isset($this->response)) {
             return null;
@@ -493,17 +410,17 @@ class Message implements MessageInterface, Countable, ArrayAccess, Iterator, Arr
         return isset($data['messages'][$this->current]);
     }
 
-    public function rewind(): void
+    public function rewind()
     {
         $this->current = 0;
     }
 
-    public function fromArray(array $data): void
+    public function fromArray(array $data)
     {
         $this->data = $data;
     }
 
-    public function toArray(): array
+    public function toArray() : array
     {
         return $this->data;
     }

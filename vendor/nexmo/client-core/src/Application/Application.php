@@ -1,122 +1,82 @@
 <?php
-
 /**
  * Vonage Client Library for PHP
  *
- * @copyright Copyright (c) 2016-2020 Vonage, Inc. (http://vonage.com)
- * @license https://github.com/Vonage/vonage-php-sdk-core/blob/master/LICENSE.txt Apache License 2.0
+ * @copyright Copyright (c) 2016 Vonage, Inc. (http://vonage.com)
+ * @license   https://github.com/vonage/vonage-php/blob/master/LICENSE MIT License
  */
-
-declare(strict_types=1);
 
 namespace Vonage\Application;
 
-use Exception;
-use JsonSerializable;
-use StdClass;
+use Vonage\Entity\JsonUnserializableInterface;
 use Vonage\Entity\EntityInterface;
 use Vonage\Entity\Hydrator\ArrayHydrateInterface;
 use Vonage\Entity\JsonResponseTrait;
 use Vonage\Entity\JsonSerializableTrait;
-use Vonage\Entity\JsonUnserializableInterface;
 use Vonage\Entity\Psr7Trait;
 
-use function count;
-use function get_class;
-use function trigger_error;
-use function ucfirst;
-
-class Application implements EntityInterface, JsonSerializable, JsonUnserializableInterface, ArrayHydrateInterface
+class Application implements EntityInterface, \JsonSerializable, JsonUnserializableInterface, ArrayHydrateInterface
 {
     use JsonSerializableTrait;
     use Psr7Trait;
     use JsonResponseTrait;
 
-    /**
-     * @var VoiceConfig
-     */
     protected $voiceConfig;
-
-    /**
-     * @var MessagesConfig
-     */
     protected $messagesConfig;
-
-    /**
-     * @var RtcConfig
-     */
     protected $rtcConfig;
-
-    /**
-     * @var VbcConfig
-     */
     protected $vbcConfig;
 
     protected $name;
 
-    /**
-     * @var array
-     */
     protected $keys = [];
 
-    /**
-     * @var string|null
-     */
     protected $id;
 
-    public function __construct(?string $id = null)
+    public function __construct($id = null)
     {
         $this->id = $id;
     }
 
-    public function getId(): ?string
+    public function getId()
     {
         return $this->id;
     }
 
-    public function setVoiceConfig(VoiceConfig $config): self
+    public function setVoiceConfig(VoiceConfig $config)
     {
         $this->voiceConfig = $config;
-
         return $this;
     }
 
-    public function setMessagesConfig(MessagesConfig $config): self
+    public function setMessagesConfig(MessagesConfig $config)
     {
         $this->messagesConfig = $config;
         return $this;
     }
 
-    public function setRtcConfig(RtcConfig $config): self
+    public function setRtcConfig(RtcConfig $config)
     {
         $this->rtcConfig = $config;
-
         return $this;
     }
 
-    public function setVbcConfig(VbcConfig $config): self
+    public function setVbcConfig(VbcConfig $config)
     {
         $this->vbcConfig = $config;
-
         return $this;
     }
 
     /**
-     * @throws Exception
+     * @return VoiceConfig
      */
-    public function getVoiceConfig(): VoiceConfig
+    public function getVoiceConfig()
     {
         if (!isset($this->voiceConfig)) {
             $this->setVoiceConfig(new VoiceConfig());
-            $data = $this->getResponseData();
-
-            if (isset($data['voice']['webhooks'])) {
+            $data = @$this->getResponseData();
+            if (isset($data['voice']) and isset($data['voice']['webhooks'])) {
                 foreach ($data['voice']['webhooks'] as $webhook) {
-                    $this->voiceConfig->setWebhook(
-                        $webhook['endpoint_type'],
-                        $webhook['endpoint'],
-                        $webhook['http_method']
-                    );
+                    $this->voiceConfig->setWebhook($webhook['endpoint_type'], $webhook['endpoint'], $webhook['http_method']);
                 }
             }
         }
@@ -125,21 +85,16 @@ class Application implements EntityInterface, JsonSerializable, JsonUnserializab
     }
 
     /**
-     * @throws Exception
+     * @return MessagesConfig
      */
-    public function getMessagesConfig(): MessagesConfig
+    public function getMessagesConfig()
     {
         if (!isset($this->messagesConfig)) {
             $this->setMessagesConfig(new MessagesConfig());
             $data = $this->getResponseData();
-
-            if (isset($data['messages']['webhooks'])) {
+            if (isset($data['messages']) and isset($data['messages']['webhooks'])) {
                 foreach ($data['messages']['webhooks'] as $webhook) {
-                    $this->getMessagesConfig()->setWebhook(
-                        $webhook['endpoint_type'],
-                        $webhook['endpoint'],
-                        $webhook['http_method']
-                    );
+                    $this->getMessagesConfig()->setWebhook($webhook['endpoint_type'], $webhook['endpoint'], $webhook['http_method']);
                 }
             }
         }
@@ -148,21 +103,16 @@ class Application implements EntityInterface, JsonSerializable, JsonUnserializab
     }
 
     /**
-     * @throws Exception
+     * @return RtcConfig
      */
-    public function getRtcConfig(): RtcConfig
+    public function getRtcConfig()
     {
         if (!isset($this->rtcConfig)) {
             $this->setRtcConfig(new RtcConfig());
             $data = $this->getResponseData();
-
-            if (isset($data['rtc']['webhooks'])) {
+            if (isset($data['rtc']) and isset($data['rtc']['webhooks'])) {
                 foreach ($data['rtc']['webhooks'] as $webhook) {
-                    $this->getRtcConfig()->setWebhook(
-                        $webhook['endpoint_type'],
-                        $webhook['endpoint'],
-                        $webhook['http_method']
-                    );
+                    $this->getRtcConfig()->setWebhook($webhook['endpoint_type'], $webhook['endpoint'], $webhook['http_method']);
                 }
             }
         }
@@ -170,7 +120,10 @@ class Application implements EntityInterface, JsonSerializable, JsonUnserializab
         return $this->rtcConfig;
     }
 
-    public function getVbcConfig(): VbcConfig
+    /**
+     * @return RtcConfig
+     */
+    public function getVbcConfig() : VbcConfig
     {
         if (!isset($this->vbcConfig)) {
             $this->setVbcConfig(new VbcConfig());
@@ -179,36 +132,38 @@ class Application implements EntityInterface, JsonSerializable, JsonUnserializab
         return $this->vbcConfig;
     }
 
-    public function setPublicKey(?string $key): self
+    public function setPublicKey($key)
     {
         $this->keys['public_key'] = $key;
-
         return $this;
     }
 
-    public function getPublicKey(): ?string
+    public function getPublicKey()
     {
-        return $this->keys['public_key'] ?? null;
+        if (isset($this->keys['public_key'])) {
+            return $this->keys['public_key'];
+        }
     }
 
-    public function getPrivateKey(): ?string
+    public function getPrivateKey()
     {
-        return $this->keys['private_key'] ?? null;
+        if (isset($this->keys['private_key'])) {
+            return $this->keys['private_key'];
+        }
     }
 
-    public function setName(string $name): self
+    public function setName($name)
     {
         $this->name = $name;
-
         return $this;
     }
 
-    public function getName(): ?string
+    public function getName()
     {
         return $this->name;
     }
 
-    public function jsonUnserialize(array $json): void
+    public function jsonUnserialize(array $json)
     {
         trigger_error(
             get_class($this) . "::jsonUnserialize is deprecated, please fromArray() instead",
@@ -218,20 +173,20 @@ class Application implements EntityInterface, JsonSerializable, JsonUnserializab
         $this->fromArray($json);
     }
 
-    public function jsonSerialize(): array
+    public function jsonSerialize()
     {
         return $this->toArray();
     }
 
-    public function __toString(): string
+    public function __toString()
     {
-        return (string)$this->getId();
+        return (string) $this->getId();
     }
 
-    public function fromArray(array $data): void
+    public function fromArray(array $data)
     {
         $this->name = $data['name'];
-        $this->id = $data['id'] ?? null;
+        $this->id   = $data['id'] ?? null;
         $this->keys = $data['keys'] ?? [];
 
         if (isset($data['capabilities'])) {
@@ -239,7 +194,7 @@ class Application implements EntityInterface, JsonSerializable, JsonUnserializab
 
             //todo: make voice  hydrate-able
             $this->voiceConfig = new VoiceConfig();
-            if (isset($capabilities['voice']['webhooks'])) {
+            if (isset($capabilities['voice']) and isset($capabilities['voice']['webhooks'])) {
                 foreach ($capabilities['voice']['webhooks'] as $name => $details) {
                     $this->voiceConfig->setWebhook($name, new Webhook($details['address'], $details['http_method']));
                 }
@@ -247,7 +202,7 @@ class Application implements EntityInterface, JsonSerializable, JsonUnserializab
 
             //todo: make messages  hydrate-able
             $this->messagesConfig = new MessagesConfig();
-            if (isset($capabilities['messages']['webhooks'])) {
+            if (isset($capabilities['messages']) and isset($capabilities['messages']['webhooks'])) {
                 foreach ($capabilities['messages']['webhooks'] as $name => $details) {
                     $this->messagesConfig->setWebhook($name, new Webhook($details['address'], $details['http_method']));
                 }
@@ -255,7 +210,7 @@ class Application implements EntityInterface, JsonSerializable, JsonUnserializab
 
             //todo: make rtc  hydrate-able
             $this->rtcConfig = new RtcConfig();
-            if (isset($capabilities['rtc']['webhooks'])) {
+            if (isset($capabilities['rtc']) and isset($capabilities['rtc']['webhooks'])) {
                 foreach ($capabilities['rtc']['webhooks'] as $name => $details) {
                     $this->rtcConfig->setWebhook($name, new Webhook($details['address'], $details['http_method']));
                 }
@@ -277,18 +232,14 @@ class Application implements EntityInterface, JsonSerializable, JsonUnserializab
         ];
 
         $capabilities = [];
-
         foreach ($availableCapabilities as $type => $values) {
-            $configAccessorMethod = 'get' . ucfirst($type) . 'Config';
-
+            $configAccessorMethod = 'get'.ucfirst($type).'Config';
             foreach ($values as $constant) {
                 $webhook = $this->$configAccessorMethod()->getWebhook($constant);
-
                 if ($webhook) {
                     if (!isset($capabilities[$type])) {
                         $capabilities[$type]['webhooks'] = [];
                     }
-
                     $capabilities[$type]['webhooks'][$constant] = [
                         'address' => $webhook->getUrl(),
                         'http_method' => $webhook->getMethod(),
@@ -299,13 +250,13 @@ class Application implements EntityInterface, JsonSerializable, JsonUnserializab
 
         // Handle VBC specifically
         if ($this->getVbcConfig()->isEnabled()) {
-            $capabilities['vbc'] = new StdClass();
+            $capabilities['vbc'] = new \StdClass;
         }
 
         // Workaround API bug. It expects an object and throws 500
         // if it gets an array
         if (!count($capabilities)) {
-            $capabilities = (object)$capabilities;
+            $capabilities = (object) $capabilities;
         }
 
         return [
