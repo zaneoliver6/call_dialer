@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '191a3b7cceea044c5ef646913d1d2335b96f55f4',
+    'reference' => 'a14baadec5bdeb798ada66f95255ec976d5a5038',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '191a3b7cceea044c5ef646913d1d2335b96f55f4',
+      'reference' => 'a14baadec5bdeb798ada66f95255ec976d5a5038',
     ),
     'cboden/ratchet' => 
     array (
@@ -94,12 +94,12 @@
     ),
     'lcobucci/jwt' => 
     array (
-      'pretty_version' => '3.4.2',
-      'version' => '3.4.2.0',
+      'pretty_version' => '3.2.5',
+      'version' => '3.2.5.0',
       'aliases' => 
       array (
       ),
-      'reference' => '17cb82dd625ccb17c74bf8f38563d3b260306483',
+      'reference' => '82be04b4753f8b7693b62852b7eab30f97524f9b',
     ),
     'nexmo/client' => 
     array (
@@ -112,12 +112,12 @@
     ),
     'nexmo/client-core' => 
     array (
-      'pretty_version' => '2.7.1',
-      'version' => '2.7.1.0',
+      'pretty_version' => '2.5.0',
+      'version' => '2.5.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => '1862c750c671844b96733abeb2af88c0c41a228f',
+      'reference' => 'f81bcdcd4cbc3afe45c415b9118a59ae348f5800',
     ),
     'ocramius/package-versions' => 
     array (
@@ -275,12 +275,12 @@
     ),
     'symfony/http-foundation' => 
     array (
-      'pretty_version' => 'v5.2.1',
-      'version' => '5.2.1.0',
+      'pretty_version' => 'v5.2.2',
+      'version' => '5.2.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'a1f6218b29897ab52acba58cfa905b83625bef8d',
+      'reference' => '16dfa5acf8103f0394d447f8eea3ea49f9e50855',
     ),
     'symfony/polyfill-mbstring' => 
     array (
@@ -302,12 +302,12 @@
     ),
     'symfony/routing' => 
     array (
-      'pretty_version' => 'v5.2.1',
-      'version' => '5.2.1.0',
+      'pretty_version' => 'v5.2.2',
+      'version' => '5.2.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => '934ac2720dcc878a47a45c986b483a7ee7193620',
+      'reference' => '348b5917e56546c6d96adbf21d7f92c9ef563661',
     ),
     'vonage/client' => 
     array (
@@ -320,12 +320,12 @@
     ),
     'vonage/client-core' => 
     array (
-      'pretty_version' => '2.7.1',
-      'version' => '2.7.1.0',
+      'pretty_version' => '2.5.0',
+      'version' => '2.5.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'c9bd01868339fc1c74e631d73d7333250b8eccbd',
+      'reference' => '7c9c78f697ac425eb48a0ad6c40e76ae7b41548a',
     ),
     'vonage/nexmo-bridge' => 
     array (
