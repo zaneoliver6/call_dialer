@@ -12,7 +12,7 @@
    $client = new \Vonage\Client($keypair);
 
    $outboudCall = new \Vonage\Voice\OutboundCall(
-      new \Vonage\Voice\Endpoint\Phone('5016142450'),
+      new \Vonage\Voice\Endpoint\Phone('5016706861'),
       new \Vonage\Voice\Endpoint\Phone('5016706861')
    );
 
