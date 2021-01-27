@@ -4,7 +4,6 @@ use MyApp\Socket;
 use Ratchet\Server\IoServer;
 use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
-require "./app/socket.php";
 
 require dirname( __FILE__ ) .  "/vendor/autoload.php";
 
