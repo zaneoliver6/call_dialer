@@ -1,8 +1,8 @@
 {
     "autoload": {
-	"psr-4": {
-		"MyApp\\": "app"
-	}
+        "psr-4": {
+            "MyApp\\": "app"
+        }
     },
     "require": {
         "nexmo/client": "^2.4",

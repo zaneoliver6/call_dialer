@@ -65,7 +65,7 @@ final class Versions
   'vonage/client' => '2.4.0@29f23e317d658ec1c3e55cf778992353492741d7',
   'vonage/client-core' => '2.7.1@c9bd01868339fc1c74e631d73d7333250b8eccbd',
   'vonage/nexmo-bridge' => '0.1.0@62653b1165f4401580ca8d2b859f59c968de3711',
-  '__root__' => 'dev-master@79355e1aa315ab9562eca7338b89335cd92bce61',
+  '__root__' => 'dev-master@191a3b7cceea044c5ef646913d1d2335b96f55f4',
 );
 
     private function __construct()
