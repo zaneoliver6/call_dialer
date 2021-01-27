@@ -1,11 +1,14 @@
 <?php
 
+use MyApp\Socket;
 use Ratchet\Server\IoServer;
 use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
-use MyApp\Socket;
+require "./app/socket.php";
 
 require dirname( __FILE__ ) .  "/vendor/autoload.php";
+
+
 
 $server = IoServer::factory(
    new HttpServer(
