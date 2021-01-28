@@ -18,7 +18,7 @@
 
    $ncco = new NCCO();
    $ncco->addAction(
-      new \Vonage\Voice\NCCO\Action\Talk('This is a text to speech call from Nexmo')
+      new \Vonage\Voice\NCCO\Action\Talk('This is a text to speech call from Vonage.')
    );
 
    $outboudCall->setNCCO($ncco);
