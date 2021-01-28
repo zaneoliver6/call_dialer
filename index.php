@@ -13,12 +13,14 @@
 
 </head>
 <body class="text-center">
-   <main class="form-signin">
-      <form>
-         <input type="text" id="number" class="form-control" placeholder="Number to Dial" required autofocus>
-         <a class="btn btn-outline-primary" href="make_call.php">Call</a>
-      </form>
-   </main>
+   <div class="container">
+      <div class="mx-auto my-auto" style="width: 300px;">
+         <form>
+            <input type="text" id="number" class="form-control" placeholder="Number to Dial" required autofocus>
+            <a class="btn btn-outline-primary" href="make_call.php">Call</a>
+         </form>
+      </div>
+   </div>
 
 <!-- JavaScript Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
