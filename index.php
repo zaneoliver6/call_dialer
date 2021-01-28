@@ -13,7 +13,7 @@
 
 </head>
 <body class="text-center">
-   <main>
+   <main class="form-signin">
       <form>
          <input type="text" id="number" class="form-control" placeholder="Number to Dial" required autofocus>
          <a class="btn btn-outline-primary" href="make_call.php">Call</a>
